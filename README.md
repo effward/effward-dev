@@ -2,9 +2,9 @@
 Code for effward.dev site
 
 ## Prerequisites
-- Rust
-- Docker/Docker Desktop
-- FlyCTL
+- [Rust](https://www.rust-lang.org/tools/install)
+- [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [FlyCTL](https://fly.io/docs/hands-on/install-flyctl/)
 
 ## Build
 Build with:
@@ -19,4 +19,6 @@ docker run -it --rm -p 8080:8080 effward-dev
 ```
 
 ## Deploy
-TBD
+```sh
+fly deploy
+```
