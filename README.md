@@ -8,17 +8,15 @@ Code for effward.dev site
 
 ## Build
 Build with:
-```sh
+```bash
 docker build -t effward-dev .
 ```
 
 ## Run
 Run with:
-```sh
+```bash
 docker run -it --rm -p 8080:8080 effward-dev
 ```
 
 ## Deploy
-```sh
-fly deploy
-```
+Open PR, get approved, merge. Then Github Actions will deploy.
