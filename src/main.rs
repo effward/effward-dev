@@ -20,7 +20,6 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Starting effward-dev...");
-    eprintln!("Stderr print test...");
 
     HttpServer::new(|| {
         App::new()
