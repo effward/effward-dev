@@ -6,5 +6,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = { version = "4", features = ["openssl"] }
-openssl = { version = "0.10", features = ["vendored"] }
+actix-web = "4"

@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for effward-dev on 2023-04-26T15:06:27-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "effward-dev"
+primary_region = "sea"
+
+[build]
+  dockerfile = "Dockerfile"
+  build-target = "release"
+
+[deploy]
+  strategy = "immediate"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 500
+    soft_limit = 350
