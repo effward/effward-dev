@@ -6,19 +6,23 @@ Code for effward.dev site
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [FlyCTL](https://fly.io/docs/hands-on/install-flyctl/)
 
+## Format
+Format code with:
+```bash
+cargo fmt
+```
+
 ## Build
 Build with:
-```sh
+```bash
 docker build -t effward-dev .
 ```
 
 ## Run
 Run with:
-```sh
+```bash
 docker run -it --rm -p 8080:8080 effward-dev
 ```
 
 ## Deploy
-```sh
-fly deploy
-```
+Open PR, get approved, merge. Then Github Actions will deploy.

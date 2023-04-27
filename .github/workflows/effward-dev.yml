@@ -1,0 +1,69 @@
+name: effward-dev
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Update Toolchain
+      run: |
+        rustup self update
+        rustup update
+        rustup component add clippy
+
+    - name: Toolchain Version Info
+      run: |
+        cargo --version --verbose
+        rustc --version
+        cargo clippy --version
+
+    - name: Lint
+      run: |
+        cargo fmt -- --check
+        cargo clippy -- -D warnings
+
+    - name: Build
+      run: cargo build --release --verbose
+
+    - name: Run tests
+      run: cargo test --verbose
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Docker Build
+      run: docker build -t effward-dev .
+
+    - name: Smoke Test
+      run: |
+        docker run --rm -p 8080:8080 effward-dev &
+        chmod +x ./smoke-test.sh
+        ./smoke-test.sh
+
+  deploy:
+    needs: [ build, docker ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: superfly/flyctl-actions/setup-flyctl@master
+
+    - name: Deploy effward-dev App
+      run: flyctl deploy --remote-only
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
