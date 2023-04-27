@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-three-quarters is-offset-one-eighth">
+    <div class="section">
+        <form action="" method="POST">
+        
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input type="text" name="title" class="input" placeholder="title">
+                    <span class="icon is-small is-left">
+                        <i class="far fa-newspaper"></i>
+                    </span>
+                </p>
+            </div>
+
+            <div class="field">
+                <textarea name="body" class="textarea" placeholder="e.g. hello world 🌐" rows="13"></textarea>
+            </div>
+            
+            <div class="field">
+                <div class="control">
+                    <input type="submit" class="button is-success is-light" value="submit">
+                </div>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}

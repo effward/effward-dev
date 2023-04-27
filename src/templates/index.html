@@ -1,21 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{title}}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-  </head>
-  <body>
-  <section class="section">
-    <div class="container">
-      <h1 class="title">
-        Hello, {{name}}!
-      </h1>
-      <p class="subtitle">
-        Welcome to <strong>effward.dev</strong>!
-      </p>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column">
+    <div class="section">
+        <p class="title is-4">hello, {{ name }}!</p>
+        <p class="subtitle is-5">welcome to <strong>effward.dev</strong> </p>
     </div>
-  </section>
-  </body>
-</html>
+</div>
+<div class="column">
+    <div class="section">
+        <p class="title is-6">recent posts</p>
+        {% for post in posts %}
+        <div class="box">
+            <p class="title is-5">{{ post.title }}</p>
+            <p class="subtitle is-6">{{ post.author }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

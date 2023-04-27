@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-half is-offset-one-quarter">
+    <div class="section">
+        <form action="" method="POST">
+        
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input type="text" name="username" class="input" placeholder="username">
+                    <span class="icon is-small is-left">
+                        {# TODO: only bounce until valid name entered, then fade #}
+                        <i class="fas fa-user fa-bounce" style="--fa-animation-iteration-count: 5"></i>
+                    </span>
+                </p>
+            </div>
+            
+            <div class="field">
+                <p class="control has-icons-left has-icons-right">
+                    <input type="email" name="email" class="input" placeholder="email">
+                    <span class="icon is-small is-left">
+                        <i class="far fa-envelope"></i>
+                    </span>
+                    <span class="icon is-small is-right">
+                        {# TODO: only flip while waiting for verification, then turn green and fade #}
+                        <i class="fas fa-check fa-flip" style="--fa-animation-iteration-count: 2"></i>
+                    </span>
+                </p>
+            </div>
+            
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input type="password" name="password" class="input" placeholder="password">
+                    <span class="icon is-small is-left">
+                        {# TODO: only shake on invalid password #}
+                        <i class="fas fa-lock fa-shake" style="--fa-animation-iteration-count: 3"></i>
+                    </span>
+                </p>
+            </div>
+            
+            <div class="field">
+                <div class="control">
+                    <input type="submit" class="button is-success is-light" value="sign up">
+                </div>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}
