@@ -10,7 +10,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 async fn hello() -> impl Responder {
     println!("Home request");
 
-    HttpResponse::Ok().body("Hello Kelly + Jissel! version2")
+    HttpResponse::Ok().body("Hello Kelly + Jissel! version3!!")
 }
 
 #[post("/echo")]
