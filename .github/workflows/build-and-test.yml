@@ -11,12 +11,30 @@ env:
 
 jobs:
     build:
-
         runs-on: ubuntu-latest
 
         steps:
         - uses: actions/checkout@v3
+
+        - name: Update Toolchain
+          run: |
+              rustup self update
+              rustup update
+              rustup component add clippy
+
+        - name: Toolchain Version Info
+          run: |
+              cargo --version --verbose
+              rustc --version
+              cargo clippy --version
+
+        - name: Lint
+          run: |
+            cargo fmt -- --check
+            cargo clippy -- -D warnings
+
         - name: Build
           run: cargo build --verbose
+
         - name: Run tests
           run: cargo test --verbose
