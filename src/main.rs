@@ -40,3 +40,22 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{
+      http::{self, header::ContentType},
+        test,
+    };
+
+    #[actix_web::test]
+    async fn test_manual_hello_ok() {
+        let request = test::TestRequest::default()
+            .insert_header(ContentType::plaintext())
+            .to_http_request();
+
+        let response = manual_hello().await.respond_to(&request);
+        assert_eq!(response.status(), http::StatusCode::OK);
+    }
+}
