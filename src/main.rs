@@ -143,7 +143,7 @@ async fn main() -> std::io::Result<()> {
     println!("Starting effward-dev...");
 
     HttpServer::new(|| {
-        let tera = Tera::new("src/templates/**/*").unwrap();
+        let tera = Tera::new("static/templates/**/*").unwrap();
         App::new()
             .app_data(web::Data::new(tera))
             .route("/", web::get().to(index))

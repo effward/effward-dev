@@ -11,7 +11,7 @@ RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var
 COPY --from=builder /app/target/release/effward-dev /app/effward-dev
 
 WORKDIR /app
-COPY /src/templates /app/src/templates
+COPY /static /app/static
 
 EXPOSE 8080
 CMD ["./effward-dev"]
