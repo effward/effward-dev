@@ -4,13 +4,20 @@
 //! println!("x is {x}");
 //! # assert_eq!(x, 7);
 //! ```
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
+use tera::{Tera, Context};
 
-#[get("/")]
-async fn hello() -> impl Responder {
+async fn index(tera: web::Data<Tera>) -> impl Responder {
     println!("Home request");
 
-    HttpResponse::Ok().body("Hello Kelly + Jissel! version3!!")
+    let mut data = Context::new();
+    data.insert("title", "effward.dev");
+    data.insert("name", "effward");
+
+    // TODO: use unwrap_or_else() and handle error
+    let rendered = tera.render("index.html", &data).unwrap();
+
+    HttpResponse::Ok().body(rendered)
 }
 
 #[post("/echo")]
@@ -31,8 +38,10 @@ async fn main() -> std::io::Result<()> {
     println!("Starting effward-dev...");
 
     HttpServer::new(|| {
+        let tera = Tera::new("src/templates/**/*").unwrap();
         App::new()
-            .service(hello)
+            .app_data(web::Data::new(tera))
+            .route("/", web::get().to(index))
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
     })
