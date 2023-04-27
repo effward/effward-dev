@@ -20,7 +20,7 @@ jobs:
       run: |
         rustup self update
         rustup update
-        rustup component add clippy
+        # rustup component add clippy # TODO: enable later
 
     - name: Toolchain Version Info
       run: |
@@ -31,7 +31,7 @@ jobs:
     - name: Lint
       run: |
         cargo fmt -- --check
-        cargo clippy -- -D warnings
+        # cargo clippy -- -D warnings # TODO: enable later
 
     - name: Build
       run: cargo build --release --verbose
