@@ -38,3 +38,6 @@ jobs:
 
         - name: Run tests
           run: cargo test --verbose
+
+        - name: Docker Build
+          run: docker build -t effward-dev .
