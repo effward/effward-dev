@@ -45,8 +45,10 @@ async fn main() -> std::io::Result<()> {
 mod tests {
     use super::*;
     use actix_web::{
-      http::{self, header::ContentType},
+        http::{self, header::ContentType},
         test,
+        web,
+        App,
     };
 
     #[actix_web::test]
@@ -57,5 +59,16 @@ mod tests {
 
         let response = manual_hello().await.respond_to(&request);
         assert_eq!(response.status(), http::StatusCode::OK);
+    }
+
+    #[actix_web::test]
+    async fn test_hello_get() {
+        let app = test::init_service(App::new().route("/", web::get().to(manual_hello))).await;
+        let request = test::TestRequest::default()
+            .insert_header(ContentType::plaintext())
+            .to_request();
+
+        let response = test::call_service(&app, request).await;
+        assert!(response.status().is_success());
     }
 }
