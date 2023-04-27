@@ -18,15 +18,15 @@ jobs:
 
         - name: Update Toolchain
           run: |
-              rustup self update
-              rustup update
-              rustup component add clippy
+            rustup self update
+            rustup update
+            rustup component add clippy
 
         - name: Toolchain Version Info
           run: |
-              cargo --version --verbose
-              rustc --version
-              cargo clippy --version
+            cargo --version --verbose
+            rustc --version
+            cargo clippy --version
 
         - name: Lint
           run: |
@@ -41,3 +41,8 @@ jobs:
 
         - name: Docker Build
           run: docker build -t effward-dev .
+
+        - name: Smoke Test
+          run: |
+            docker run --rm -p 8080:8080 effward-dev &
+            ./smoke-test.sh
