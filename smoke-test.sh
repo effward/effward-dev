@@ -3,6 +3,10 @@
 url="http://localhost:8080/hey"
 expected="Hey there!"
 
+echo "Sleeping for 5 seconds..."
+sleep 5
+
+echo "Making smoke test request..."
 response=$(curl -s "$url")
 
 if [[ "$response" == *"$expected"* ]]; then

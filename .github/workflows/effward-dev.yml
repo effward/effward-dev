@@ -1,4 +1,4 @@
-name: Build and Test
+name: effward-dev
 
 on:
     push:
@@ -10,11 +10,11 @@ env:
     CARGO_TERM_COLOR: always
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-        steps:
-        - uses: actions/checkout@v3
+    steps:
+    - uses: actions/checkout@v3
 
 #        - name: Update Toolchain
 #          run: |
@@ -47,3 +47,16 @@ jobs:
             docker run --rm -p 8080:8080 effward-dev &
             chmod +x ./smoke-test.sh
             ./smoke-test.sh
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: superfly/flyctl-actions/setup-flyctl@master
+
+    - name: Deploy effward-dev App
+    run: flyctl deploy --remote-only
+    env:
+    FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
