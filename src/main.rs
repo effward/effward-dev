@@ -5,8 +5,8 @@
 //! # assert_eq!(x, 7);
 //! ```
 use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
-use serde::{Serialize, Deserialize};
-use tera::{Tera, Context};
+use serde::{Deserialize, Serialize};
+use tera::{Context, Tera};
 
 #[derive(Serialize)]
 struct Post {
@@ -80,7 +80,10 @@ async fn signup(tera: web::Data<Tera>) -> impl Responder {
 }
 
 async fn process_signup(data: web::Form<SignupRequest>) -> impl Responder {
-    println!("Received signup request for: {} ({})", data.username, data.email);
+    println!(
+        "Received signup request for: {} ({})",
+        data.username, data.email
+    );
 
     HttpResponse::Ok().body(format!("Successfully saved user: {}", data.username))
 }
@@ -100,7 +103,10 @@ async fn login(tera: web::Data<Tera>) -> impl Responder {
 async fn process_login(data: web::Form<LoginRequest>) -> impl Responder {
     println!("Received login request for: {}", data.username);
 
-    HttpResponse::Ok().body(format!("Successfully received login for: {}", data.username))
+    HttpResponse::Ok().body(format!(
+        "Successfully received login for: {}",
+        data.username
+    ))
 }
 
 async fn submit(tera: web::Data<Tera>) -> impl Responder {
