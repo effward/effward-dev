@@ -110,6 +110,8 @@ async fn process_login(data: web::Form<LoginRequest>) -> impl Responder {
 }
 
 async fn submit(tera: web::Data<Tera>) -> impl Responder {
+    println!("Submit request");
+
     let mut data = Context::new();
     data.insert("title", "effward.dev - submit");
 
@@ -119,6 +121,7 @@ async fn submit(tera: web::Data<Tera>) -> impl Responder {
 
 async fn process_submission(data: web::Form<Submission>) -> impl Responder {
     println!("{:?}", data);
+
     HttpResponse::Ok().body(format!("Posted submission: {}", data.title))
 }
 
