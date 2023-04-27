@@ -46,9 +46,7 @@ mod tests {
     use super::*;
     use actix_web::{
         http::{self, header::ContentType},
-        test,
-        web,
-        App,
+        test, web, App,
     };
 
     #[actix_web::test]
