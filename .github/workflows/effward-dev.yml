@@ -26,7 +26,7 @@ jobs:
       run: |
         cargo --version --verbose
         rustc --version
-        cargo clippy --version
+        # cargo clippy --version # TODO: enable later
 
     - name: Lint
       run: |
