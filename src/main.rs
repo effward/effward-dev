@@ -1,19 +1,28 @@
+//! Top-level crate doc
+//! ```
+//! let x = 5;
+//! println!("x is {x}");
+//! # assert_eq!(x, 7);
+//! ```
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
 #[get("/")]
 async fn hello() -> impl Responder {
     println!("Home request");
-    HttpResponse::Ok().body("Hello world!")
+
+    HttpResponse::Ok().body("Hello Kelly + Jissel!")
 }
 
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
     println!("Echo request");
+
     HttpResponse::Ok().body(req_body)
 }
 
 async fn manual_hello() -> impl Responder {
     println!("Hey request");
+
     HttpResponse::Ok().body("Hey there!")
 }
 
