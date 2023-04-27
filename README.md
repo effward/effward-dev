@@ -6,6 +6,12 @@ Code for effward.dev site
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [FlyCTL](https://fly.io/docs/hands-on/install-flyctl/)
 
+## Format
+Format code with:
+```bash
+cargo fmt
+```
+
 ## Build
 Build with:
 ```bash
