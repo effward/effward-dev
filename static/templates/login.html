@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-half is-offset-one-quarter">
+    <div class="section">
+        <form action="" method="POST">
+        
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input type="text" name="username" class="input" placeholder="username">
+                    <span class="icon is-small is-left">
+                        {# TODO: only bounce until valid name entered, then fade #}
+                        <i class="fas fa-user fa-bounce" style="--fa-animation-iteration-count: 5"></i>
+                    </span>
+                </p>
+            </div>
+
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input type="password" name="password" class="input" placeholder="password">
+                    <span class="icon is-small is-left">
+                        {# TODO: only shake on invalid password #}
+                        <i class="fas fa-lock fa-shake" style="--fa-animation-iteration-count: 3"></i>
+                    </span>
+                </p>
+            </div>
+            
+            <div class="field">
+                <div class="control">
+                    <input type="submit" class="button is-success is-light" value="log in">
+                </div>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}
