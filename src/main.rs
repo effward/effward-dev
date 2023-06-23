@@ -22,7 +22,7 @@ use std::str;
 use tera::{Context, Tera};
 use uuid::Uuid;
 
-use crate::models::{UserModel, EmailModel};
+use crate::models::{EmailModel, UserModel};
 
 #[derive(Serialize)]
 struct User {
@@ -155,9 +155,7 @@ WHERE address = ?
     .fetch_one(pool)
     .await
     {
-        Ok(email) => {
-            email.id
-        }
+        Ok(email) => email.id,
         Err(_err) => {
             let new_id = sqlx::query!(
                 r#"
@@ -237,8 +235,9 @@ WHERE name = ?
             // password verification
             let parts: Vec<&str> = user.password.split(':').collect();
             if parts.len() != 3 {
-                return HttpResponse::InternalServerError()
-                    .json(serde_json::json!({"status": "error","message": "password corrupted in DB"}));
+                return HttpResponse::InternalServerError().json(
+                    serde_json::json!({"status": "error","message": "password corrupted in DB"}),
+                );
             }
             let salt = parts[1];
             let password = hash_password(data.password.to_owned(), salt.as_bytes());
@@ -249,9 +248,10 @@ WHERE name = ?
                 })});
 
                 return HttpResponse::Ok().json(user_response);
-            }
-            else {
-                return HttpResponse::Unauthorized().json(serde_json::json!({"status": "error", "message": "Incorrect password."}));
+            } else {
+                return HttpResponse::Unauthorized().json(
+                    serde_json::json!({"status": "error", "message": "Incorrect password."}),
+                );
             }
         }
         Err(err) => {
