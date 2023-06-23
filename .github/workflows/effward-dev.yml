@@ -51,6 +51,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Docker Compose Build
+      run: docker compose build
+
     - name: Docker Compose Smoke Test
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
