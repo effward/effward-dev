@@ -45,12 +45,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Docker Build
-      run: docker build -t effward-dev .
-
-    - name: Smoke Test
+    - name: Docker Compose Smoke Test
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
-        docker run --rm -p 8080:8080 effward-dev &
+        docker compose up &
         chmod +x ./smoke-test.sh
         ./smoke-test.sh
 

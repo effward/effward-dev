@@ -5,6 +5,7 @@ Code for effward.dev site
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [FlyCTL](https://fly.io/docs/hands-on/install-flyctl/)
+- [PostgreSQL](https://www.postgresql.org/download/)
 
 Recommended:
 - [cargo-watch](https://crates.io/crates/cargo-watch)
@@ -19,7 +20,7 @@ cargo fmt
 ## Build
 Build with:
 ```bash
-docker build -t effward-dev .
+docker compose build
 ```
 OR
 ```bash
@@ -29,7 +30,7 @@ cargo build
 ## Run
 Run with:
 ```bash
-docker run -it --rm -p 8080:8080 effward-dev
+docker compose up
 ```
 OR
 ```bash
