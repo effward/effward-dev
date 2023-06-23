@@ -19,7 +19,7 @@ cargo fmt
 ## Build
 Build with:
 ```bash
-docker build -t effward-dev .
+docker compose build
 ```
 OR
 ```bash
@@ -29,7 +29,7 @@ cargo build
 ## Run
 Run with:
 ```bash
-docker run -it --rm -p 8080:8080 effward-dev
+docker compose up
 ```
 OR
 ```bash

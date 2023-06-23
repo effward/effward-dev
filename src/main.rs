@@ -6,6 +6,7 @@
 //! ```
 use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
+use std::env;
 use tera::{Context, Tera};
 
 #[derive(Serialize)]
@@ -18,20 +19,20 @@ struct Post {
 #[derive(Debug, Deserialize)]
 struct Submission {
     title: String,
-    body: String,
+    _body: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct SignupRequest {
     username: String,
     email: String,
-    password: String,
+    _password: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct LoginRequest {
     username: String,
-    password: String,
+    _password: String,
 }
 
 async fn index(tera: web::Data<Tera>) -> impl Responder {
@@ -142,6 +143,14 @@ async fn manual_hello() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     println!("Starting effward-dev...");
 
+    let url = env::var("DATABASE_URL").expect("DATABASE_URL not found");
+    let db_server = get_server(&url).unwrap();
+    println!("Trying to connect to {}", db_server);
+    let builder = mysql::OptsBuilder::from_opts(mysql::Opts::from_url(&url).unwrap());
+    let pool = mysql::Pool::new(builder.ssl_opts(mysql::SslOpts::default())).unwrap();
+    let _connection = pool.get_conn().unwrap();
+    println!("Successfully connected to DB!");
+
     HttpServer::new(|| {
         let tera = Tera::new("static/templates/**/*").unwrap();
         App::new()
@@ -159,6 +168,19 @@ async fn main() -> std::io::Result<()> {
     .bind(("0.0.0.0", 8080))?
     .run()
     .await
+}
+
+fn get_server(connection: &str) -> Result<String, String> {
+    let parts: Vec<&str> = connection.split('@').collect();
+    let num_parts = parts.len();
+    if num_parts < 2 {
+        return Err(format!(
+            "Connection string must contain at least one '@' character: {}",
+            connection
+        ));
+    }
+    let last_part = parts[num_parts - 1];
+    Ok(last_part.to_string())
 }
 
 #[cfg(test)]
