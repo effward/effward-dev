@@ -63,7 +63,7 @@ jobs:
         ./smoke-test.sh
 
   deploy:
-    needs: [ build, docker ]
+    needs: [ build ]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
