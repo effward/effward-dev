@@ -5,7 +5,6 @@ Code for effward.dev site
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [FlyCTL](https://fly.io/docs/hands-on/install-flyctl/)
-- [PostgreSQL](https://www.postgresql.org/download/)
 
 Recommended:
 - [cargo-watch](https://crates.io/crates/cargo-watch)

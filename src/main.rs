@@ -174,7 +174,10 @@ fn get_server(connection: &str) -> Result<String, String> {
     let parts: Vec<&str> = connection.split('@').collect();
     let num_parts = parts.len();
     if num_parts < 2 {
-        return Err(format!("Connection string must contain at least one '@' character: {}", connection));
+        return Err(format!(
+            "Connection string must contain at least one '@' character: {}",
+            connection
+        ));
     }
     let last_part = parts[num_parts - 1];
     Ok(last_part.to_string())
