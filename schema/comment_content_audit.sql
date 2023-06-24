@@ -1,7 +1,7 @@
 CREATE TABLE `comment_content_audit` (
     `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-    `comment_id` bigint NOT NULL,
-    `content_id` bigint NOT NULL,
+    `comment_id` bigint unsigned NOT NULL,
+    `content_id` bigint unsigned NOT NULL,
     `created` datetime NOT NULL,
 
     PRIMARY KEY (`id`),

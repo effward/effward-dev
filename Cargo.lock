@@ -880,6 +880,7 @@ dependencies = [
  "sha2",
  "sqlx",
  "tera",
+ "thiserror",
  "uuid",
 ]
 
