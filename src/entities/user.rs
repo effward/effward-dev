@@ -3,33 +3,13 @@ use std::str;
 use chrono::{NaiveDateTime, Utc};
 use hex::ToHex;
 use pbkdf2::pbkdf2_hmac_array;
+use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use super::email;
-
-#[derive(thiserror::Error, Debug, Clone)]
-pub enum UserError {
-    #[error("Internal error")]
-    Internal(String),
-    #[error("Invalid password")]
-    InvalidPassword,
-    #[error("Malformed password")]
-    MalformedPassword,
-    #[error("User not found")]
-    NotFound,
-}
-
-impl std::convert::From<sqlx::Error> for UserError {
-    fn from(err: sqlx::Error) -> Self {
-        match err {
-            sqlx::Error::RowNotFound => UserError::NotFound,
-            _ => UserError::Internal(err.to_string()),
-        }
-    }
-}
+use super::{email, EntityError};
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
 pub struct UserModel {
@@ -45,11 +25,11 @@ pub struct UserModel {
 
 pub async fn create(
     pool: &MySqlPool,
-    name: String,
-    email: String,
-    password: String,
-) -> Result<u64, UserError> {
-    let email_id = email::get_or_create_id(pool, email).await;
+    name: &String,
+    email: &String,
+    password: &Secret<String>,
+    ) -> Result<u64, EntityError> {
+    let email_id = email::get_or_create_id(pool, email).await?;
 
     let public_id = Uuid::new_v4().into_bytes();
 
@@ -65,7 +45,7 @@ INSERT INTO users (public_id, name, email_id, password, is_deleted, created, upd
 VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
         &public_id[..],
-        &name,
+        name,
         email_id,
         password,
         0,
@@ -80,9 +60,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 
 pub async fn get_by_name_password(
     pool: &MySqlPool,
-    name: String,
-    password: String,
-) -> Result<UserModel, UserError> {
+    name: &String,
+    password: &Secret<String>,
+    ) -> Result<UserModel, EntityError> {
     let user = sqlx::query_as!(
         UserModel,
         r#"
@@ -90,7 +70,7 @@ SELECT *
 FROM users
 WHERE name = ?
         "#,
-        &name
+        name
     )
     .fetch_one(pool)
     .await?;
@@ -98,7 +78,7 @@ WHERE name = ?
     // password verification
     let parts: Vec<&str> = user.password.split(':').collect();
     if parts.len() != 3 {
-        return Err(UserError::MalformedPassword);
+        return Err(EntityError::MalformedData);
     }
     let salt = parts[1];
     let password = hash_password(password, salt.as_bytes());
@@ -106,16 +86,16 @@ WHERE name = ?
     if password == user.password {
         return Ok(user);
     } else {
-        return Err(UserError::InvalidPassword);
+        return Err(EntityError::InvalidPassword);
     }
 }
 
-fn hash_password(password: String, salt: &[u8]) -> String {
+fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
     const HASH_FUNC: &str = "sha256_1024";
     const SEPARATOR: &str = ":";
     const N: u32 = 1024; // number of iterations
 
-    let raw_password = password.as_bytes();
+    let raw_password = password.expose_secret().as_bytes();
     let hash = pbkdf2_hmac_array::<Sha256, 20>(raw_password, salt, N);
 
     let hash_hex = hash.encode_hex::<String>();
