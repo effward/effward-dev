@@ -1,7 +1,7 @@
 #!/bin/bash
 
-url="http://localhost:8080/hey"
-expected="Hey there!"
+url="http://localhost:8080/health"
+expected="healthy"
 
 echo "Sleeping for 5 seconds..."
 sleep 5
