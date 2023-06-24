@@ -1,9 +1,8 @@
-CREATE TABLE emails (
-    id bigint NOT NULL AUTO_INCREMENT,
-    address varchar(320) NOT NULL,
-    created datetime NOT NULL,
+CREATE TABLE `emails` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+    `address` varchar(320) NOT NULL,
+    `created` datetime NOT NULL,
 
-    PRIMARY KEY(id)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `emails_idx_address` (`address`)
 );
-
-CREATE UNIQUE INDEX emails_idx_address ON emails (address);

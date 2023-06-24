@@ -34,9 +34,13 @@ jobs:
         # cargo clippy -- -D warnings # TODO: enable later
 
     - name: Build
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: cargo build --release --verbose
 
     - name: Run tests
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: cargo test --verbose
 
   docker:
@@ -52,6 +56,8 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Docker Compose Build
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: docker compose build
 
     - name: Docker Compose Smoke Test
@@ -72,6 +78,6 @@ jobs:
     - uses: superfly/flyctl-actions/setup-flyctl@master
 
     - name: Deploy effward-dev App
-      run: flyctl deploy --remote-only
+      run: flyctl deploy --remote-only --build-arg DB_URL=${{ secrets.DATABASE_URL }}
       env:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

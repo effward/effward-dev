@@ -4,10 +4,32 @@
 //! println!("x is {x}");
 //! # assert_eq!(x, 7);
 //! ```
-use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
+mod models;
+
+use actix_cors::Cors;
+use actix_web::middleware::Logger;
+use actix_web::{http::header, post, web, App, HttpResponse, HttpServer, Responder};
+use chrono::prelude::*;
+use dotenv::dotenv;
+use env_logger;
+use hex::ToHex;
+use pbkdf2::pbkdf2_hmac_array;
 use serde::{Deserialize, Serialize};
+use sha2::Sha256;
+use sqlx::mysql::{MySqlPool, MySqlPoolOptions};
 use std::env;
+use std::str;
 use tera::{Context, Tera};
+use uuid::Uuid;
+
+use crate::models::{EmailModel, UserModel};
+
+#[derive(Serialize)]
+struct User {
+    id: String,
+    name: String,
+    created: String,
+}
 
 #[derive(Serialize)]
 struct Post {
@@ -26,18 +48,24 @@ struct Submission {
 struct SignupRequest {
     username: String,
     email: String,
-    _password: String,
+    password: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct LoginRequest {
     username: String,
-    _password: String,
+    password: String,
 }
 
-async fn index(tera: web::Data<Tera>) -> impl Responder {
+pub struct AppState {
+    tera: Tera,
+    pool: MySqlPool,
+}
+
+async fn index(state: web::Data<AppState>) -> impl Responder {
     println!("Home request");
 
+    let tera = &state.tera;
     let mut data = Context::new();
 
     let posts = [
@@ -68,9 +96,10 @@ async fn index(tera: web::Data<Tera>) -> impl Responder {
     HttpResponse::Ok().body(rendered)
 }
 
-async fn signup(tera: web::Data<Tera>) -> impl Responder {
+async fn signup(state: web::Data<AppState>) -> impl Responder {
     println!("Signup request");
 
+    let tera = &state.tera;
     let mut data = Context::new();
     data.insert("title", "effward.dev - sign up");
 
@@ -80,18 +109,96 @@ async fn signup(tera: web::Data<Tera>) -> impl Responder {
     HttpResponse::Ok().body(rendered)
 }
 
-async fn process_signup(data: web::Form<SignupRequest>) -> impl Responder {
+fn hash_password(password: String, salt: &[u8]) -> String {
+    const HASH_FUNC: &str = "sha256_1024";
+    const SEPARATOR: &str = ":";
+    const N: u32 = 1024; // number of iterations
+
+    let raw_password = password.as_bytes();
+    let hash = pbkdf2_hmac_array::<Sha256, 20>(raw_password, salt, N);
+
+    let hash_hex = hash.encode_hex::<String>();
+    let salt_str = str::from_utf8(salt).unwrap();
+    return hash_hex + SEPARATOR + salt_str + SEPARATOR + HASH_FUNC;
+}
+
+async fn process_signup(
+    data: web::Form<SignupRequest>,
+    state: web::Data<AppState>,
+) -> impl Responder {
     println!(
         "Received signup request for: {} ({})",
         data.username, data.email
     );
 
-    HttpResponse::Ok().body(format!("Successfully saved user: {}", data.username))
+    let pool = &state.pool;
+
+    let salt_uuid = Uuid::new_v4().simple().to_string();
+    let salt = salt_uuid[..6].as_bytes();
+
+    let password = hash_password(data.password.to_owned(), salt);
+
+    let created = Utc::now();
+
+    let uuid = Uuid::new_v4();
+    let public_id = uuid.into_bytes();
+
+    let email_id = match sqlx::query_as!(
+        EmailModel,
+        r#"
+SELECT *
+FROM emails
+WHERE address = ?
+        "#,
+        &data.email.to_lowercase()
+    )
+    .fetch_one(pool)
+    .await
+    {
+        Ok(email) => email.id,
+        Err(_err) => {
+            let new_id = sqlx::query!(
+                r#"
+INSERT INTO emails (address, created)
+VALUES (?, ?)
+                "#,
+                &data.email.to_lowercase(),
+                created
+            )
+            .execute(pool)
+            .await
+            .unwrap()
+            .last_insert_id();
+
+            new_id
+        }
+    };
+
+    let user_id = sqlx::query!(
+        r#"
+INSERT INTO users (public_id, name, email_id, password, is_deleted, created, updated)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+        "#,
+        &public_id[..],
+        &data.username,
+        email_id,
+        password,
+        0,
+        created,
+        created
+    )
+    .execute(pool)
+    .await
+    .unwrap()
+    .last_insert_id();
+
+    HttpResponse::Ok().body(format!("Successfully saved user: {}", user_id))
 }
 
-async fn login(tera: web::Data<Tera>) -> impl Responder {
+async fn login(state: web::Data<AppState>) -> impl Responder {
     println!("Login request");
 
+    let tera = &state.tera;
     let mut data = Context::new();
     data.insert("title", "effward.dev - log in");
 
@@ -101,18 +208,82 @@ async fn login(tera: web::Data<Tera>) -> impl Responder {
     HttpResponse::Ok().body(rendered)
 }
 
-async fn process_login(data: web::Form<LoginRequest>) -> impl Responder {
+async fn process_login(
+    data: web::Form<LoginRequest>,
+    state: web::Data<AppState>,
+) -> impl Responder {
     println!("Received login request for: {}", data.username);
 
-    HttpResponse::Ok().body(format!(
-        "Successfully received login for: {}",
-        data.username
-    ))
+    let pool = &state.pool;
+
+    let query_result = sqlx::query_as!(
+        UserModel,
+        r#"
+SELECT *
+FROM users
+WHERE name = ?
+        "#,
+        &data.username
+    )
+    .fetch_one(pool)
+    .await;
+
+    match query_result {
+        Ok(user) => {
+            println!("Found User in DB");
+
+            // password verification
+            let parts: Vec<&str> = user.password.split(':').collect();
+            if parts.len() != 3 {
+                return HttpResponse::InternalServerError().json(
+                    serde_json::json!({"status": "error","message": "password corrupted in DB"}),
+                );
+            }
+            let salt = parts[1];
+            let password = hash_password(data.password.to_owned(), salt.as_bytes());
+
+            if password == user.password {
+                let user_response = serde_json::json!({"status": "success", "data": serde_json::json!({
+                    "user": translate_user(&user)
+                })});
+
+                return HttpResponse::Ok().json(user_response);
+            } else {
+                return HttpResponse::Unauthorized().json(
+                    serde_json::json!({"status": "error", "message": "Incorrect password."}),
+                );
+            }
+        }
+        Err(err) => {
+            return HttpResponse::InternalServerError()
+                .json(serde_json::json!({"status": "error","message": format!("{:?}", err)}));
+        }
+    }
 }
 
-async fn submit(tera: web::Data<Tera>) -> impl Responder {
+fn translate_user(user: &UserModel) -> User {
+    let mut bytes: [u8; 16] = [0; 16];
+    let mut i = 0;
+    for byte in &user.public_id {
+        bytes[i] = *byte;
+        i += 1;
+
+        if i >= 16 {
+            break;
+        }
+    }
+    let public_id = Uuid::from_bytes(bytes);
+    return User {
+        id: public_id.simple().to_string(),
+        name: user.name.to_owned(),
+        created: user.created.to_string(),
+    };
+}
+
+async fn submit(state: web::Data<AppState>) -> impl Responder {
     println!("Submit request");
 
+    let tera = &state.tera;
     let mut data = Context::new();
     data.insert("title", "effward.dev - submit");
 
@@ -141,20 +312,57 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting effward-dev...");
+    println!("🚀 Starting effward-dev...");
 
-    let url = env::var("DATABASE_URL").expect("DATABASE_URL not found");
+    if std::env::var_os("RUST_LOG").is_none() {
+        std::env::set_var("RUST_LOG", "actix_web=info");
+    }
+    dotenv().ok();
+    env_logger::init();
+
+    let url =
+        env::var("DATABASE_URL").expect("DATABASE_URL environment variable required, but not set");
     let db_server = get_server(&url).unwrap();
     println!("Trying to connect to {}", db_server);
-    let builder = mysql::OptsBuilder::from_opts(mysql::Opts::from_url(&url).unwrap());
+    /* let builder = mysql::OptsBuilder::from_opts(mysql::Opts::from_url(&url).unwrap());
     let pool = mysql::Pool::new(builder.ssl_opts(mysql::SslOpts::default())).unwrap();
-    let _connection = pool.get_conn().unwrap();
-    println!("Successfully connected to DB!");
+    let _connection = pool.get_conn().unwrap();*/
 
-    HttpServer::new(|| {
+    let pool = match MySqlPoolOptions::new()
+        .max_connections(10)
+        .connect(&url)
+        .await
+    {
+        Ok(pool) => {
+            println!("✅ Connection to the database is successful!");
+            pool
+        }
+        Err(err) => {
+            println!("🔥 Failed to connect to the database: {:?}", err);
+            std::process::exit(1);
+        }
+    };
+
+    println!("🚀 Starting HttpServer...");
+
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:8080")
+            .allowed_origin("https://*.effward.dev")
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![
+                header::CONTENT_TYPE,
+                header::AUTHORIZATION,
+                header::ACCEPT,
+            ])
+            .supports_credentials();
+
         let tera = Tera::new("static/templates/**/*").unwrap();
         App::new()
-            .app_data(web::Data::new(tera))
+            .app_data(web::Data::new(AppState {
+                tera,
+                pool: pool.clone(),
+            }))
             .route("/", web::get().to(index))
             .route("/signup", web::get().to(signup))
             .route("/signup", web::post().to(process_signup))
@@ -164,6 +372,8 @@ async fn main() -> std::io::Result<()> {
             .route("/submit", web::post().to(process_submission))
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
+            .wrap(cors)
+            .wrap(Logger::default())
     })
     .bind(("0.0.0.0", 8080))?
     .run()
