@@ -23,7 +23,7 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{health, home, login, signup, submit, logout};
+use crate::routes::{health, home, login, logout, signup, submit};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
