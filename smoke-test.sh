@@ -3,8 +3,8 @@
 url="http://localhost:8080/health"
 expected="healthy"
 
-echo "Sleeping for 5 seconds..."
-sleep 5
+echo "Sleeping for 20 seconds..."
+sleep 20
 
 echo "Making smoke test request..."
 response=$(curl -s "$url")

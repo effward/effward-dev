@@ -1,12 +1,17 @@
 use actix_web::{web, HttpResponse, Responder};
-use tera::{Context, Tera};
+use actix_web_flash_messages::IncomingFlashMessages;
+use sqlx::MySqlPool;
+use tera::Tera;
 
-use crate::routes::models::Post;
+use crate::routes::{models::Post, session_state::TypedSession, user_context::build_user_context};
 
-pub async fn home(tera: web::Data<Tera>) -> impl Responder {
-    println!("Home request");
-
-    let mut data = Context::new();
+pub async fn home(
+    session: TypedSession,
+    flash_message: IncomingFlashMessages,
+    pool: web::Data<MySqlPool>,
+    tera: web::Data<Tera>,
+) -> impl Responder {
+    let user_context = build_user_context(session, flash_message, &pool, "home").await;
 
     let posts = [
         Post {
@@ -26,12 +31,17 @@ pub async fn home(tera: web::Data<Tera>) -> impl Responder {
         },
     ];
 
-    data.insert("title", "effward.dev - home");
-    data.insert("name", "effward");
-    data.insert("posts", &posts);
+    let name = match user_context.user {
+        Some(user) => user.name,
+        None => String::from("stranger"),
+    };
 
-    // TODO: use unwrap_or_else() and handle error
-    let rendered = tera.render("index.html", &data).unwrap();
+    let mut context = user_context.context;
+    context.insert("name", &name);
+    context.insert("posts", &posts);
+
+    // TODO: handle error
+    let rendered = tera.render("index.html", &context).unwrap();
 
     HttpResponse::Ok().body(rendered)
 }

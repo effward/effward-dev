@@ -63,6 +63,8 @@ jobs:
     - name: Docker Compose Smoke Test
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        HMAC_KEY: ${{ secrets.HMAC_KEY }}
+        REDIS_URI: redis://redis:6379
       run: |
         docker compose up &
         chmod +x ./smoke-test.sh

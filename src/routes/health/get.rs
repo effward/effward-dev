@@ -1,9 +1,11 @@
-use actix_web::{HttpResponse, Responder};
+use actix_web::{http::header::ContentType, HttpResponse, Responder};
 
 pub async fn health() -> impl Responder {
     println!("Healthcheck request received.");
 
-    HttpResponse::Ok().body("healthy")
+    HttpResponse::Ok()
+        .content_type(ContentType::plaintext())
+        .body("healthy")
 }
 
 #[cfg(test)]

@@ -1,6 +1,9 @@
 use chrono::{NaiveDateTime, Utc};
+use email_address::*;
 use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
+
+use super::EntityError;
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
 pub struct EmailModel {
@@ -9,9 +12,14 @@ pub struct EmailModel {
     pub created: NaiveDateTime,
 }
 
-pub async fn get_or_create_id(pool: &MySqlPool, email: String) -> u64 {
-    let created = Utc::now();
+pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, EntityError> {
     let email_lower = email.to_lowercase();
+    if !EmailAddress::is_valid(&email_lower) {
+        return Err(EntityError::InvalidInput("email".to_owned()));
+    }
+
+    let created = Utc::now();
+
     let email_id = match sqlx::query_as!(
         EmailModel,
         r#"
@@ -26,7 +34,7 @@ WHERE address = ?
     {
         Ok(email) => email.id,
         Err(_err) => {
-            let new_id = sqlx::query!(
+            let create_result = sqlx::query!(
                 r#"
 INSERT INTO emails (address, created)
 VALUES (?, ?)
@@ -35,13 +43,11 @@ VALUES (?, ?)
                 created
             )
             .execute(pool)
-            .await
-            .unwrap()
-            .last_insert_id();
+            .await?;
 
-            new_id
+            create_result.last_insert_id()
         }
     };
 
-    return email_id;
+    return Ok(email_id);
 }
