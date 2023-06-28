@@ -1,14 +1,20 @@
 use actix_web::{web, HttpResponse, Responder};
-use tera::{Context, Tera};
+use actix_web_flash_messages::IncomingFlashMessages;
+use sqlx::MySqlPool;
+use tera::Tera;
 
-pub async fn signup(tera: web::Data<Tera>) -> impl Responder {
-    println!("Signup request");
+use crate::routes::{session_state::TypedSession, user_context::build_user_context};
 
-    let mut data = Context::new();
-    data.insert("title", "effward.dev - sign up");
+pub async fn signup(
+    session: TypedSession,
+    flash_messages: IncomingFlashMessages,
+    pool: web::Data<MySqlPool>,
+    tera: web::Data<Tera>,
+) -> impl Responder {
+    let user_context = build_user_context(session, flash_messages, &pool, "login").await;
 
-    // TODO: use unwrap_or_else() and handle error
-    let rendered = tera.render("signup.html", &data).unwrap();
+    // TODO: handle error
+    let rendered = tera.render("signup.html", &user_context.context).unwrap();
 
     HttpResponse::Ok().body(rendered)
 }

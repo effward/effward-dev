@@ -2,31 +2,32 @@
 pub enum EntityError {
     #[error("Internal error")]
     Internal(String),
-    #[error("Invalid password")]
-    InvalidPassword,
+    #[error("Invalid input")]
+    InvalidInput(String),
     #[error("Malformed data")]
     MalformedData,
     #[error("Entity not found")]
     NotFound,
+    #[error("Duplicate key")]
+    DuplicateKey,
 }
 
 impl std::convert::From<sqlx::Error> for EntityError {
     fn from(err: sqlx::Error) -> Self {
         match err {
             sqlx::Error::RowNotFound => EntityError::NotFound,
-            sqlx::Error::Database(db) => {
-                match db.code() {
-                    Some(code) => {
-                        println!("🔥🔥🔥 SQLSTATE code: {}", code.to_string());
-                        EntityError::Internal(db.to_string())
-                    }
-                    None => {
-                        EntityError::Internal(db.to_string())
-                    }
-                }
-                
-            }
-            _ => EntityError::Internal(err.to_string())
+            sqlx::Error::Database(db) => match db.code() {
+                Some(code) => match code.to_string().as_str() {
+                    "23000" => EntityError::DuplicateKey,
+                    _ => EntityError::Internal(format!(
+                        "SQLx DatabaseError. SQLSTATE Code: {}\nerror: {:?}",
+                        code.to_string(),
+                        db
+                    )),
+                },
+                None => EntityError::Internal(format!("SQLx DatabaseError. error: {:?}", db)),
+            },
+            _ => EntityError::Internal(format!("SQLx Error: {:?}", err)),
         }
     }
 }

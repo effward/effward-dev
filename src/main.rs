@@ -8,48 +8,105 @@ mod entities;
 mod routes;
 
 use actix_cors::Cors;
+use actix_session::storage::RedisSessionStore;
+use actix_session::SessionMiddleware;
+use actix_web::cookie::Key;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, web, App, HttpServer};
+use actix_web_flash_messages::storage::CookieMessageStore;
+use actix_web_flash_messages::FlashMessagesFramework;
 use dotenv::dotenv;
 use env_logger;
+use log::{error, warn};
 use sqlx::mysql::MySqlPoolOptions;
 use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{health, home, login, signup, submit};
+use crate::routes::{health, home, login, signup, submit, logout};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("🚀 Starting effward-dev...");
-
+    println!("📜 Setting up env_logger...");
     if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "info"); // set to "debug" for more logs
+        std::env::set_var("RUST_LOG", "info"); // set to "debug" for more logs, "warn" for fewer
     }
     dotenv().ok();
     env_logger::init();
+    warn!("📜✅ Logger started");
 
-    let url =
-        env::var("DATABASE_URL").expect("DATABASE_URL environment variable required, but not set");
+    warn!("🖕 Starting effward-dev dependencies...");
+
+    let url = env::var("DATABASE_URL")
+        .expect("📚🔥 DATABASE_URL environment variable required, but not set");
     let db_server = get_server(&url).unwrap();
-    println!("Trying to connect to {}", db_server);
 
+    warn!("📚 Connecting to MySQL DB: {}", db_server);
     let pool = match MySqlPoolOptions::new()
         .max_connections(10)
         .connect(&url)
         .await
     {
         Ok(pool) => {
-            println!("✅ Connection to the database is successful!");
+            warn!("📚✅ Connection to the database is successful!");
             pool
         }
         Err(err) => {
-            println!("🔥 Failed to connect to the database: {:?}", err);
+            error!("📚🔥 Failed to connect to the database: {:?}", err);
             std::process::exit(1);
         }
     };
 
-    println!("🚀 Starting HttpServer...");
+    warn!("🌎 Initializing Tera static templates...");
+    let tera = match Tera::new("static/templates/**/*") {
+        Ok(t) => {
+            warn!("🌎✅ Static templates initialized.");
+            t
+        }
+        Err(e) => {
+            error!("🌎🔥 Failed to initialize Tera: {:?}", e);
+            std::process::exit(1);
+        }
+    };
+
+    warn!("💡 Initializing Flash Message Framework...");
+    let hmac_key = match env::var("HMAC_KEY") {
+        Ok(key) => key,
+        Err(e) => {
+            error!(
+                "💡🔥 HMAC_KEY environment variable is not set! Error: {}",
+                e
+            );
+            std::process::exit(1);
+        }
+    };
+    let secret_key = Key::from(hmac_key.as_bytes());
+    let message_store = CookieMessageStore::builder(secret_key.clone()).build();
+    let message_framework = FlashMessagesFramework::builder(message_store).build();
+    warn!("💡✅ Flash Message Framework initialized.");
+
+    warn!("🗝️ Connecting to redis...");
+    let reds_uri = match env::var("REDIS_URI") {
+        Ok(uri) => uri,
+        Err(e) => {
+            error!(
+                "🗝️🔥 REDIS_URI environment variable is not set! Error: {}",
+                e
+            );
+            std::process::exit(1);
+        }
+    };
+    let redis_store = match RedisSessionStore::new(reds_uri).await {
+        Ok(store) => store,
+        Err(e) => {
+            error!("🗝️🔥 Error creating RedisSessionStore. Error: {}", e);
+            std::process::exit(1);
+        }
+    };
+    warn!("🗝️✅ Connected to redis.");
+
+    warn!("🖕✅ Finished starting effward-dev dependencies.");
+    warn!("🚀 Starting HttpServer...");
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -64,20 +121,25 @@ async fn main() -> std::io::Result<()> {
             ])
             .supports_credentials();
 
-        let tera = Tera::new("static/templates/**/*").unwrap();
         App::new()
             .wrap(cors)
+            .wrap(message_framework.clone())
+            .wrap(SessionMiddleware::new(
+                redis_store.clone(),
+                secret_key.clone(),
+            ))
             .wrap(Logger::default())
             .route("/", web::get().to(home::get::home))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))
             .route("/login", web::get().to(login::get::login))
             .route("/login", web::post().to(login::post::process_login))
+            .route("/logout", web::post().to(logout::post::process_logout))
             .route("/submit", web::get().to(submit::get::submit))
             .route("/submit", web::post().to(submit::post::process_submission))
             .route("/health", web::get().to(health::get::health))
             .app_data(web::Data::new(pool.clone()))
-            .app_data(web::Data::new(tera))
+            .app_data(web::Data::new(tera.clone()))
     })
     .bind(("0.0.0.0", 8080))?
     .run()

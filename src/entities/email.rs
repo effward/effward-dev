@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime, Utc};
+use email_address::*;
 use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
 
@@ -12,8 +13,13 @@ pub struct EmailModel {
 }
 
 pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, EntityError> {
-    let created = Utc::now();
     let email_lower = email.to_lowercase();
+    if !EmailAddress::is_valid(&email_lower) {
+        return Err(EntityError::InvalidInput("email".to_owned()));
+    }
+
+    let created = Utc::now();
+
     let email_id = match sqlx::query_as!(
         EmailModel,
         r#"

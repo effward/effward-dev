@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, Responder, http::header::ContentType};
+use actix_web::{http::header::ContentType, HttpResponse, Responder};
 
 pub async fn health() -> impl Responder {
     println!("Healthcheck request received.");

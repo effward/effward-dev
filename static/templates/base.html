@@ -26,7 +26,14 @@
     
                     });
                 });
-    
+
+                (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                    const $notification = $delete.parentNode;
+
+                    $delete.addEventListener('click', () => {
+                        $notification.parentNode.removeChild($notification);
+                    });
+                });
             });
         </script>
     </head>
@@ -59,18 +66,47 @@
                 <div class="navbar-end">
                     <div class="navbar-item">
                         <div class="buttons">
+                            {% if is_auth %}
+                            <form action="/logout" method="POST">
+                                <input type="submit" class="button is-light" value="log out">
+                            </form>
+                            {% else %}
                             <a class="button is-success" href="/signup">
                                 <strong>sign up</strong>
                             </a>
                             <a class="button is-light" href="/login">
                                 log in
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </nav>
-        
+        {% for success in notifications.successes %}
+        <div class="notification is-success">
+            <button class="delete"></button>
+            <p class="has-text-centered has-text-weight-semibold">{{ success }}</p>
+        </div>
+        {% endfor %}
+        {% for info in notifications.infos %}
+        <div class="notification is-info">
+            <button class="delete"></button>
+            <p class="has-text-centered has-text-weight-semibold">{{ info }}</p>
+        </div>
+        {% endfor %}
+        {% for warn in notifications.warns %}
+        <div class="notification is-warning">
+            <button class="delete"></button>
+            <p class="has-text-centered has-text-weight-semibold">{{ warn }}</p>
+        </div>
+        {% endfor %}
+        {% for error in notifications.errors %}
+        <div class="notification is-danger">
+            <button class="delete"></button>
+            <p class="has-text-centered has-text-weight-semibold">{{ error }}</p>
+        </div>
+        {% endfor %}
         <div class="columns">
         {% block content %}
         {% endblock %}

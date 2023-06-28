@@ -16,6 +16,12 @@ Format code with:
 cargo fmt
 ```
 
+## Environment Variables
+Set the following environment variables:
+- DATABASE_URL (PlanetScale)
+- HMAC_KEY (Generate 512 bit key [here](https://generate-random.org/api-key-generator/512-bit/mixed-numbers))
+- REDIS_URI (redis://127.0.0.1:6379)
+
 ## Build
 Build with:
 ```bash
@@ -33,10 +39,12 @@ docker compose up
 ```
 OR
 ```bash
+docker compose up redis
 cargo run
 ```
 OR
 ```bash
+docker compose up redis
 cargo watch -x run
 ```
 

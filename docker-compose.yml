@@ -1,7 +1,16 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - effward-network
+
   effward-dev:
+    depends_on:
+      - redis
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,6 +18,8 @@ services:
         DB_URL: $DATABASE_URL
     environment:
       - DATABASE_URL
+      - HMAC_KEY
+      - REDIS_URI=redis://redis:6379
     ports:
       - "8080:8080"
     networks:
