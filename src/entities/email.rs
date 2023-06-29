@@ -6,7 +6,7 @@ use sqlx::MySqlPool;
 use super::EntityError;
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct EmailModel {
+pub struct EmailEntity {
     pub id: u64,
     pub address: String,
     pub created: NaiveDateTime,
@@ -48,9 +48,9 @@ VALUES (?, ?)
 async fn try_get_by_address(
     pool: &MySqlPool,
     address: &String,
-    ) -> Result<Option<EmailModel>, EntityError> {
+    ) -> Result<Option<EmailEntity>, EntityError> {
     let email_entity = sqlx::query_as!(
-        EmailModel,
+        EmailEntity,
         r#"
 SELECT *
 FROM emails

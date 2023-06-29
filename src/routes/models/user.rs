@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::entities::user::UserModel;
+use crate::entities::user::UserEntity;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct User {
@@ -10,7 +10,7 @@ pub struct User {
     pub created: String,
 }
 
-pub fn translate_user(user: UserModel) -> User {
+pub fn translate_user(user: UserEntity) -> User {
     let mut bytes: [u8; 16] = [0; 16];
     let mut i = 0;
     for byte in &user.public_id {

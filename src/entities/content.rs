@@ -9,7 +9,7 @@ pub const MIN_CONTENT_LENGTH: usize = 1;
 pub const MAX_CONTENT_LENGTH: usize = 16_777_215;
 
 #[derive(Clone, Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct ContentModel {
+pub struct ContentEntity {
     pub id: u64,
     pub body: String,
     pub body_hash: Vec<u8>,
@@ -39,7 +39,7 @@ pub async fn insert(
 pub async fn get_by_content(
     pool: &MySqlPool,
     content: &String,
-) -> Result<Option<ContentModel>, EntityError> {
+) -> Result<Option<ContentEntity>, EntityError> {
     let body_hash = hash_content(content)?;
     try_get_by_body_hash(pool, content, &body_hash).await
 }
@@ -70,9 +70,9 @@ async fn try_get_by_body_hash(
     pool: &MySqlPool,
     content: &String,
     body_hash: &Vec<u8>,
-) -> Result<Option<ContentModel>, EntityError> {
+) -> Result<Option<ContentEntity>, EntityError> {
     let content_entity = sqlx::query_as!(
-        ContentModel,
+        ContentEntity,
         r#"
 SELECT *
 FROM contents

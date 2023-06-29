@@ -17,7 +17,7 @@ pub const MIN_PASSWORD_LENGTH: usize = 8;
 pub const MAX_PASSWORD_LENGTH: usize = 256;
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct UserModel {
+pub struct UserEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
     pub name: String,
@@ -75,9 +75,9 @@ pub async fn get_by_name_password(
     pool: &MySqlPool,
     name: &String,
     password: &Secret<String>,
-) -> Result<UserModel, EntityError> {
-    let user = sqlx::query_as!(
-        UserModel,
+) -> Result<UserEntity, EntityError> {
+    let user_entity = sqlx::query_as!(
+        UserEntity,
         r#"
 SELECT *
 FROM users
@@ -89,24 +89,24 @@ WHERE name = ?
     .await?;
 
     // password verification
-    let parts: Vec<&str> = user.password.split(':').collect();
+    let parts: Vec<&str> = user_entity.password.split(':').collect();
     if parts.len() != 3 {
         return Err(EntityError::MalformedData);
     }
     let salt = parts[1];
     let password = hash_password(password, salt.as_bytes());
 
-    if password == user.password {
-        Ok(user)
+    if password == user_entity.password {
+        Ok(user_entity)
     } else {
         Err(EntityError::InvalidInput("password", "incorrect password"))
     }
 }
 
-pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<UserModel, EntityError> {
+pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<UserEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
-    let user = sqlx::query_as!(
-        UserModel,
+    let user_entity = sqlx::query_as!(
+        UserEntity,
         r#"
 SELECT *
 FROM users
@@ -117,7 +117,7 @@ WHERE public_id = ?
     .fetch_one(pool)
     .await?;
 
-    Ok(user)
+    Ok(user_entity)
 }
 
 fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {

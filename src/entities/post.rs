@@ -10,7 +10,7 @@ pub const MIN_TITLE_LENGTH: usize = 4;
 pub const MAX_TITLE_LENGTH: usize = 400;
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct PostModel {
+pub struct PostEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
     pub author: u64,
@@ -64,9 +64,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     Ok(post_id)
 }
 
-pub async fn get(pool: &MySqlPool, id: u64) -> Result<PostModel, EntityError> {
-    let post = sqlx::query_as!(
-        PostModel,
+pub async fn get(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
+    let post_entity = sqlx::query_as!(
+        PostEntity,
         r#"
 SELECT *
 FROM posts
@@ -77,13 +77,13 @@ WHERE id = ?
     .fetch_one(pool)
     .await?;
     
-    Ok(post)
+    Ok(post_entity)
 }
 
-pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<PostModel, EntityError> {
+pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<PostEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
-    let post = sqlx::query_as!(
-        PostModel,
+    let post_entity = sqlx::query_as!(
+        PostEntity,
         r#"
 SELECT *
 FROM posts
@@ -94,12 +94,12 @@ WHERE public_id = ?
     .fetch_one(pool)
     .await?;
     
-    Ok(post)
+    Ok(post_entity)
 }
 
-pub async fn get_recent(pool: &MySqlPool, start_index: u64, count: u8) -> Result<Vec<PostModel>, EntityError> {
-    let posts = sqlx::query_as!(
-        PostModel,
+pub async fn get_recent(pool: &MySqlPool, start_index: u64, count: u8) -> Result<Vec<PostEntity>, EntityError> {
+    let post_entities = sqlx::query_as!(
+        PostEntity,
         r#"
 SELECT *
 FROM posts
@@ -113,7 +113,7 @@ LIMIT ?
     .fetch_all(pool)
     .await?;
     
-    Ok(posts)
+    Ok(post_entities)
 }
 
 fn verify_link(link: &Option<String>) -> Result<(), EntityError> {
