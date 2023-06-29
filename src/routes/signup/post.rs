@@ -62,7 +62,7 @@ fn convert_error(entity_error: EntityError) -> SignupErrorCode {
             error!("process_signup error: {}", err);
             SignupErrorCode::Unknown
         }
-        EntityError::InvalidInput(param) => match param.as_str() {
+        EntityError::InvalidInput(param, _) => match param {
             "email" => SignupErrorCode::InvalidEmail,
             "name" => SignupErrorCode::InvalidUsername,
             "password" => SignupErrorCode::InvalidPassword,

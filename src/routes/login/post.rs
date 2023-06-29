@@ -80,7 +80,7 @@ fn convert_error(entity_error: EntityError) -> LoginErrorCode {
             error!("🔥 internal error: {}", err);
             LoginErrorCode::Unknown
         }
-        EntityError::InvalidInput(_) => LoginErrorCode::InvalidPassword,
+        EntityError::InvalidInput(_, _) => LoginErrorCode::InvalidPassword,
         EntityError::MalformedData => LoginErrorCode::MalformedPassword,
         EntityError::NotFound => LoginErrorCode::InvalidUsername,
         EntityError::DuplicateKey => LoginErrorCode::Unknown,

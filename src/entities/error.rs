@@ -3,7 +3,7 @@ pub enum EntityError {
     #[error("Internal error")]
     Internal(String),
     #[error("Invalid input")]
-    InvalidInput(String),
+    InvalidInput(&'static str, &'static str),
     #[error("Malformed data")]
     MalformedData,
     #[error("Entity not found")]

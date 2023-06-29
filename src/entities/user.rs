@@ -9,7 +9,7 @@ use sha2::Sha256;
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use super::{email, EntityError};
+use super::{email, EntityError, utils};
 
 pub const MIN_USERNAME_LENGTH: usize = 4;
 pub const MAX_USERNAME_LENGTH: usize = 32;
@@ -35,10 +35,10 @@ pub async fn create(
     password: &Secret<String>,
 ) -> Result<u64, EntityError> {
     if password.expose_secret().len() > MAX_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password".to_owned()));
+        return Err(EntityError::InvalidInput("password", "password is too long"));
     }
     if password.expose_secret().len() < MIN_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password".to_owned()));
+        return Err(EntityError::InvalidInput("password", "password is too short"));
     }
 
     let email_id = email::get_or_create_id(pool, email).await?;
@@ -65,9 +65,10 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
         created
     )
     .execute(pool)
-    .await?;
+    .await?
+    .last_insert_id();
 
-    Ok(user_id.last_insert_id())
+    Ok(user_id)
 }
 
 pub async fn get_by_name_password(
@@ -98,7 +99,7 @@ WHERE name = ?
     if password == user.password {
         Ok(user)
     } else {
-        Err(EntityError::InvalidInput("password".to_owned()))
+        Err(EntityError::InvalidInput("password", "incorrect password"))
     }
 }
 
@@ -133,14 +134,5 @@ fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
 }
 
 fn sanitize_name(name: &String) -> Result<String, EntityError> {
-    if name.len() < MIN_USERNAME_LENGTH {
-        return Err(EntityError::InvalidInput("name".to_owned()));
-    }
-
-    let escaped = html_escape::encode_text(name);
-    if escaped.len() > MAX_USERNAME_LENGTH {
-        return Err(EntityError::InvalidInput("name".to_owned()));
-    }
-
-    Ok(escaped.to_lowercase())
+    utils::sanitize_text(name, MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH, "name")
 }
