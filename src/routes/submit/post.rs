@@ -25,7 +25,7 @@ pub async fn process_submission(
     data: web::Form<SubmitRequest>,
 ) -> impl Responder {
     match get_auth_user_entity(session, &pool).await {
-        Ok(auth_user_entity) => match post::create(
+        Ok(auth_user_entity) => match post::insert(
             &pool,
             &auth_user_entity.id,
             &data.title,

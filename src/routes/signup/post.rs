@@ -28,7 +28,7 @@ pub async fn process_signup(
     pool: web::Data<MySqlPool>,
     data: web::Form<SignupRequest>,
 ) -> impl Responder {
-    let result = user::create(&pool, &data.username, &data.email, &data.password).await;
+    let result = user::insert(&pool, &data.username, &data.email, &data.password).await;
 
     match result {
         Ok(_) => {

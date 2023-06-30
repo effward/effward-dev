@@ -21,7 +21,7 @@ pub struct PostEntity {
     pub updated: NaiveDateTime,
 }
 
-pub async fn create(
+pub async fn insert(
     pool: &MySqlPool,
     author: &u64,
     title: &String,
@@ -67,7 +67,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     Ok(post_id)
 }
 
-pub async fn get(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
+pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
     let post_entity = sqlx::query_as!(
         PostEntity,
         r#"

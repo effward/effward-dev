@@ -27,7 +27,7 @@ pub struct UserEntity {
     pub updated: NaiveDateTime,
 }
 
-pub async fn create(
+pub async fn insert(
     pool: &MySqlPool,
     name: &String,
     email: &String,
