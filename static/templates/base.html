@@ -42,7 +42,7 @@
             }
         </style>
     </head>
-    <body>
+    <body class="has-background-light">
         <nav class="navbar is-light" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
@@ -97,7 +97,6 @@
                 </div>
             </div>
         </nav>
-
         {% for success in notifications.successes %}
         <div class="hero">
             <div class="box notification is-success">
@@ -130,20 +129,23 @@
             </div>
         </div>
         {% endfor %}
-        <div class="box columns has-background-light">
+        <div class="columns">
         {% block content %}
         {% endblock %}
         </div>
         
-        <footer class="footer">
+        <footer class="footer has-background-light">
             <div class="content is-small has-text-centered">
                     <strong>effward.dev</strong> by <a href="https://effward.dev">effward</a>
                 <br>
-                    the source code is licensed
-                    <a href="http://opensource.org/licenses/mit-license.php">mit</a>
+                    the
+                    <a href="https://github.com/effward/effward-dev">source code</a>
+                    is licensed <a href="https://opensource.org/license/mit/">mit</a>
                 <br>
                     the website content
-                    is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">cc by nc sa 4.0</a>.
+                    is licensed <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">cc by nc sa 4.0</a>.
+                <br>
+                    <a class="button is-light is-small" href="https://www.paypal.com/donate/?hosted_button_id=2NW9M8A4Q2N82">donate</a>
             </div>
         </footer>
     </body>

@@ -50,3 +50,16 @@ cargo watch -x run
 
 ## Deploy
 Open PR, get approved, merge. Then Github Actions will deploy.
+
+# `TODO:`
+
+## Bulma Ideas
+### Bulma Extensions
+https://bulma.io/extensions/
+
+- bulma-carousel (image posts, project showcase)
+- bulma-iconpicker (post icon (category) picker)
+- bulma-tagsinput (tagging posts)
+- bulma-ribbon / bulma-badge (notification counters)
+- bulma-timeline (alternate resume view?)
+- bulma-toast (make notifications float)
