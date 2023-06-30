@@ -1,4 +1,4 @@
-use actix_web::{http::header::LOCATION, web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use log::{error, info};
 use secrecy::Secret;
@@ -7,7 +7,7 @@ use sqlx::MySqlPool;
 
 use crate::{
     entities::{user, EntityError},
-    routes::{models, session_state::TypedSession},
+    routes::{models, user_context::TypedSession, utils},
 };
 
 #[derive(Debug, Deserialize)]
@@ -41,9 +41,7 @@ pub async fn do_login_and_redirect(
                 Ok(_) => {
                     info!("Successfully set user session");
                     FlashMessage::success("successfully logged in").send();
-                    HttpResponse::SeeOther()
-                        .insert_header((LOCATION, "/"))
-                        .finish()
+                    utils::redirect("/")
                 }
                 Err(e) => {
                     error!("Error inserting into session: {:?}", e);
@@ -69,9 +67,7 @@ enum LoginErrorCode {
 fn login_error_redirect(error_code: LoginErrorCode) -> HttpResponse {
     let error_message = get_error_message(error_code);
     FlashMessage::error(error_message).send();
-    HttpResponse::SeeOther()
-        .insert_header((LOCATION, "/login"))
-        .finish()
+    utils::redirect("/login")
 }
 
 fn convert_error(entity_error: EntityError) -> LoginErrorCode {
@@ -80,7 +76,7 @@ fn convert_error(entity_error: EntityError) -> LoginErrorCode {
             error!("🔥 internal error: {}", err);
             LoginErrorCode::Unknown
         }
-        EntityError::InvalidInput(_) => LoginErrorCode::InvalidPassword,
+        EntityError::InvalidInput(_, _) => LoginErrorCode::InvalidPassword,
         EntityError::MalformedData => LoginErrorCode::MalformedPassword,
         EntityError::NotFound => LoginErrorCode::InvalidUsername,
         EntityError::DuplicateKey => LoginErrorCode::Unknown,

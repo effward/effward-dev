@@ -18,7 +18,7 @@ where
     actix_web::error::ErrorBadRequest(e)
 }
 
-pub fn see_other(location: &str) -> HttpResponse {
+pub fn redirect(location: &str) -> HttpResponse {
     HttpResponse::SeeOther()
         .insert_header((LOCATION, location))
         .finish()

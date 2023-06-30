@@ -1,4 +1,4 @@
-use actix_web::{http::header::LOCATION, web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use log::error;
 use secrecy::Secret;
@@ -13,7 +13,7 @@ use crate::{
         },
         EntityError,
     },
-    routes::{login::post::do_login_and_redirect, session_state::TypedSession},
+    routes::{login::post::do_login_and_redirect, user_context::TypedSession, utils},
 };
 
 #[derive(Debug, Deserialize)]
@@ -25,13 +25,16 @@ pub struct SignupRequest {
 
 pub async fn process_signup(
     session: TypedSession,
-    data: web::Form<SignupRequest>,
     pool: web::Data<MySqlPool>,
+    data: web::Form<SignupRequest>,
 ) -> impl Responder {
-    let result = user::create(&pool, &data.username, &data.email, &data.password).await;
+    let result = user::insert(&pool, &data.username, &data.email, &data.password).await;
 
     match result {
-        Ok(_) => do_login_and_redirect(session, pool, &data.username, &data.password).await,
+        Ok(_) => {
+            FlashMessage::success("successfully signed up").send();
+            do_login_and_redirect(session, pool, &data.username, &data.password).await
+        }
         Err(entity_error) => {
             let error_code = convert_error(entity_error);
             signup_error_redirect(error_code)
@@ -51,9 +54,7 @@ pub enum SignupErrorCode {
 fn signup_error_redirect(error_code: SignupErrorCode) -> HttpResponse {
     let error_message = get_error_message(error_code);
     FlashMessage::error(error_message).send();
-    HttpResponse::SeeOther()
-        .insert_header((LOCATION, "/signup"))
-        .finish()
+    utils::redirect("/signup")
 }
 
 fn convert_error(entity_error: EntityError) -> SignupErrorCode {
@@ -62,7 +63,7 @@ fn convert_error(entity_error: EntityError) -> SignupErrorCode {
             error!("process_signup error: {}", err);
             SignupErrorCode::Unknown
         }
-        EntityError::InvalidInput(param) => match param.as_str() {
+        EntityError::InvalidInput(param, _) => match param {
             "email" => SignupErrorCode::InvalidEmail,
             "name" => SignupErrorCode::InvalidUsername,
             "password" => SignupErrorCode::InvalidPassword,

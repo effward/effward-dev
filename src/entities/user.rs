@@ -4,20 +4,19 @@ use chrono::{NaiveDateTime, Utc};
 use hex::ToHex;
 use pbkdf2::pbkdf2_hmac_array;
 use secrecy::{ExposeSecret, Secret};
-use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use super::{email, EntityError};
+use super::{email, utils, EntityError};
 
 pub const MIN_USERNAME_LENGTH: usize = 4;
 pub const MAX_USERNAME_LENGTH: usize = 32;
 pub const MIN_PASSWORD_LENGTH: usize = 8;
 pub const MAX_PASSWORD_LENGTH: usize = 256;
 
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct UserModel {
+#[derive(Debug, sqlx::FromRow)]
+pub struct UserEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
     pub name: String,
@@ -28,17 +27,23 @@ pub struct UserModel {
     pub updated: NaiveDateTime,
 }
 
-pub async fn create(
+pub async fn insert(
     pool: &MySqlPool,
     name: &String,
     email: &String,
     password: &Secret<String>,
 ) -> Result<u64, EntityError> {
     if password.expose_secret().len() > MAX_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password".to_owned()));
+        return Err(EntityError::InvalidInput(
+            "password",
+            "password is too long",
+        ));
     }
     if password.expose_secret().len() < MIN_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password".to_owned()));
+        return Err(EntityError::InvalidInput(
+            "password",
+            "password is too short",
+        ));
     }
 
     let email_id = email::get_or_create_id(pool, email).await?;
@@ -65,18 +70,37 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
         created
     )
     .execute(pool)
-    .await?;
+    .await?
+    .last_insert_id();
 
-    Ok(user_id.last_insert_id())
+    Ok(user_id)
 }
 
 pub async fn get_by_name_password(
     pool: &MySqlPool,
     name: &String,
     password: &Secret<String>,
-) -> Result<UserModel, EntityError> {
-    let user = sqlx::query_as!(
-        UserModel,
+) -> Result<UserEntity, EntityError> {
+    let user_entity = get_by_name(pool, name).await?;
+
+    // password verification
+    let parts: Vec<&str> = user_entity.password.split(':').collect();
+    if parts.len() != 3 {
+        return Err(EntityError::MalformedData);
+    }
+    let salt = parts[1];
+    let password = hash_password(password, salt.as_bytes());
+
+    if password == user_entity.password {
+        Ok(user_entity)
+    } else {
+        Err(EntityError::InvalidInput("password", "incorrect password"))
+    }
+}
+
+pub async fn get_by_name(pool: &MySqlPool, name: &String) -> Result<UserEntity, EntityError> {
+    let user_entity = sqlx::query_as!(
+        UserEntity,
         r#"
 SELECT *
 FROM users
@@ -87,25 +111,32 @@ WHERE name = ?
     .fetch_one(pool)
     .await?;
 
-    // password verification
-    let parts: Vec<&str> = user.password.split(':').collect();
-    if parts.len() != 3 {
-        return Err(EntityError::MalformedData);
-    }
-    let salt = parts[1];
-    let password = hash_password(password, salt.as_bytes());
-
-    if password == user.password {
-        Ok(user)
-    } else {
-        Err(EntityError::InvalidInput("password".to_owned()))
-    }
+    Ok(user_entity)
 }
 
-pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<UserModel, EntityError> {
+pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<UserEntity, EntityError> {
+    let user_entity = sqlx::query_as!(
+        UserEntity,
+        r#"
+SELECT *
+FROM users
+WHERE id = ?
+        "#,
+        id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(user_entity)
+}
+
+pub async fn get_by_public_id(
+    pool: &MySqlPool,
+    public_id: Uuid,
+) -> Result<UserEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
-    let user = sqlx::query_as!(
-        UserModel,
+    let user_entity = sqlx::query_as!(
+        UserEntity,
         r#"
 SELECT *
 FROM users
@@ -116,7 +147,7 @@ WHERE public_id = ?
     .fetch_one(pool)
     .await?;
 
-    Ok(user)
+    Ok(user_entity)
 }
 
 fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
@@ -133,14 +164,5 @@ fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
 }
 
 fn sanitize_name(name: &String) -> Result<String, EntityError> {
-    if name.len() < MIN_USERNAME_LENGTH {
-        return Err(EntityError::InvalidInput("name".to_owned()));
-    }
-
-    let escaped = html_escape::encode_text(name);
-    if escaped.len() > MAX_USERNAME_LENGTH {
-        return Err(EntityError::InvalidInput("name".to_owned()));
-    }
-
-    Ok(escaped.to_lowercase())
+    utils::sanitize_text(name, MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH, "name")
 }

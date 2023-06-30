@@ -1,19 +1,15 @@
-use actix_web::{http::header::LOCATION, HttpResponse, Responder};
+use actix_web::Responder;
 use actix_web_flash_messages::FlashMessage;
 
-use crate::routes::session_state::TypedSession;
+use crate::routes::{user_context::TypedSession, utils};
 
 pub async fn process_logout(session: TypedSession) -> impl Responder {
     match session.get_user_id() {
         Ok(_) => {
             session.log_out();
             FlashMessage::success("successfully logged out").send();
-            HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/"))
-                .finish()
+            utils::redirect("/")
         }
-        Err(_) => HttpResponse::SeeOther()
-            .insert_header((LOCATION, "/"))
-            .finish(),
+        Err(_) => utils::redirect("/"),
     }
 }

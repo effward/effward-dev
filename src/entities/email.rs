@@ -1,12 +1,11 @@
 use chrono::{NaiveDateTime, Utc};
 use email_address::*;
-use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
 
 use super::EntityError;
 
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
-pub struct EmailModel {
+#[derive(Debug, sqlx::FromRow)]
+pub struct EmailEntity {
     pub id: u64,
     pub address: String,
     pub created: NaiveDateTime,
@@ -15,39 +14,48 @@ pub struct EmailModel {
 pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, EntityError> {
     let email_lower = email.to_lowercase();
     if !EmailAddress::is_valid(&email_lower) {
-        return Err(EntityError::InvalidInput("email".to_owned()));
+        return Err(EntityError::InvalidInput("email", "email is invalid"));
     }
 
-    let created = Utc::now();
+    let email_entity = try_get_by_address(pool, &email_lower).await?;
+    match email_entity {
+        Some(e) => Ok(e.id),
+        None => Ok(insert(pool, &email_lower).await?),
+    }
+}
 
-    let email_id = match sqlx::query_as!(
-        EmailModel,
+async fn insert(pool: &MySqlPool, address: &String) -> Result<u64, EntityError> {
+    let created = Utc::now();
+    let email_id = sqlx::query!(
+        r#"
+INSERT INTO emails (address, created)
+VALUES (?, ?)
+        "#,
+        address,
+        created
+    )
+    .execute(pool)
+    .await?
+    .last_insert_id();
+
+    Ok(email_id)
+}
+
+async fn try_get_by_address(
+    pool: &MySqlPool,
+    address: &String,
+) -> Result<Option<EmailEntity>, EntityError> {
+    let email_entity = sqlx::query_as!(
+        EmailEntity,
         r#"
 SELECT *
 FROM emails
 WHERE address = ?
         "#,
-        email_lower
+        address
     )
-    .fetch_one(pool)
-    .await
-    {
-        Ok(email) => email.id,
-        Err(_err) => {
-            let create_result = sqlx::query!(
-                r#"
-INSERT INTO emails (address, created)
-VALUES (?, ?)
-                "#,
-                email_lower,
-                created
-            )
-            .execute(pool)
-            .await?;
+    .fetch_optional(pool)
+    .await?;
 
-            create_result.last_insert_id()
-        }
-    };
-
-    return Ok(email_id);
+    Ok(email_entity)
 }

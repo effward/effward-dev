@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-three-quarters is-offset-one-eighth">
+<div class="column is-10 is-offset-1">
     <div class="section">
-        <form action="/submit" method="POST">
+        <form class="box" action="/submit" method="POST">
         
             <div class="field">
                 <p class="control has-icons-left">
@@ -15,7 +15,22 @@
             </div>
 
             <div class="field">
-                <textarea name="body" class="textarea" placeholder="e.g. hello world 🌐" rows="13"></textarea>
+                <p class="control has-icons-left">
+                    <input type="text" name="link" class="input" placeholder="link, e.g. http://effward.dev -- (optional)">
+                    <span class="icon is-small is-left">
+                        <i class="fas fa-link"></i>
+                    </span>
+                </p>
+            </div>
+
+            <div class="field">
+                <textarea
+                    name="content"
+                    class="textarea"
+                    placeholder="text, e.g. hello world 🌐 -- (optional)"
+                    rows="4"
+                    onkeyup="if (this.scrollHeight > this.clientHeight) this.style.height = this.scrollHeight + 'px';"
+                    style="overflow: auto; transition: height 0.2s ease-out;"></textarea>
             </div>
             
             <div class="field">

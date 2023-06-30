@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-half is-offset-one-quarter">
+    <div class="section">
+        <fieldset disabled>
+        <div class="field">
+            <label class="label">User Name</label>
+            <p class="control has-icons-left">
+                <input type="text" name="username" class="input" value="{{ user.name }}">
+                <span class="icon is-small is-left">
+                    {# TODO: only bounce until valid name entered, then fade #}
+                    <i class="fas fa-user fa-bounce" style="--fa-animation-iteration-count: 5"></i>
+                </span>
+            </p>
+        </div>
+        <div class="field">
+            <label class="label">User ID</label>
+            <p class="control has-icons-left">
+                <input type="text" name="id" class="input" value="{{ user.id }}">
+                <span class="icon is-small is-left">
+                    {# TODO: only bounce until valid name entered, then fade #}
+                    <i class="fas fa-id-card fa-bounce" style="--fa-animation-iteration-count: 5"></i>
+                </span>
+            </p>
+        </div>
+        <div class="field">
+            <label class="label">Member Since</label>
+            <p class="control has-icons-left">
+                <input type="text" name="created" class="input" value="{{ user.created }} UTC">
+                <span class="icon is-small is-left">
+                    {# TODO: only bounce until valid name entered, then fade #}
+                    <i class="fas fa-calendar fa-flip" style="--fa-animation-iteration-count: 4"></i>
+                </span>
+            </p>
+        </div>
+        </fieldset>
+    </div>
+</div>
+{% endblock %}
