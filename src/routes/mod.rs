@@ -3,9 +3,11 @@ mod user_context;
 mod utils;
 
 pub mod health;
-pub mod home;
+pub mod index;
 pub mod login;
 pub mod logout;
-pub mod session_state;
+pub mod post;
+pub mod posts;
 pub mod signup;
 pub mod submit;
+pub mod users;

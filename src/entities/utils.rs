@@ -1,6 +1,11 @@
 use super::EntityError;
 
-pub fn sanitize_text(text: &str, min: usize, max: usize, param_name: &'static str) -> Result<String, EntityError> {
+pub fn sanitize_text(
+    text: &str,
+    min: usize,
+    max: usize,
+    param_name: &'static str,
+) -> Result<String, EntityError> {
     if text.len() < min {
         return Err(EntityError::InvalidInput(param_name, "too short"));
     }

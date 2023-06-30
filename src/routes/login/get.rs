@@ -3,7 +3,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::routes::{session_state::TypedSession, user_context::build_user_context};
+use crate::routes::user_context::{user_context::build_user_context, TypedSession};
 
 pub async fn login(
     session: TypedSession,

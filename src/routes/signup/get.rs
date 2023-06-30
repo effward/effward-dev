@@ -3,7 +3,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::routes::{session_state::TypedSession, user_context::build_user_context};
+use crate::routes::user_context::{user_context::build_user_context, TypedSession};
 
 pub async fn signup(
     session: TypedSession,
@@ -11,7 +11,7 @@ pub async fn signup(
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
-    let user_context = build_user_context(session, flash_messages, &pool, "login").await;
+    let user_context = build_user_context(session, flash_messages, &pool, "signup").await;
 
     // TODO: handle error
     let rendered = tera.render("signup.html", &user_context.context).unwrap();

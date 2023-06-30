@@ -36,13 +36,20 @@
                 });
             });
         </script>
+        <style>
+            article.media a:hover {
+                text-decoration: none;
+            }
+        </style>
     </head>
     <body>
-        <nav class="navbar" role="navigation" aria-label="main navigation">
+        <nav class="navbar is-light" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
-                    <i class="fas fa-hand-middle-finger fa-1x pr-2"></i>
-                    <p class="title is-6">effward.dev</p>
+                    <span class="icon has-text-info">
+                        <i class="fas fa-hand-middle-finger fa-1x pr-1"></i>
+                    </span>
+                    <p><strong>effward.dev</strong></p>
                 </a>
                 
                 <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
@@ -54,63 +61,90 @@
             
             <div id="navMenu" class="navbar-menu">
                 <div class="navbar-start">
-                    <a class="navbar-item" href="/submit">
-                        blog
+                    <a class="navbar-item" href="/posts">
+                        posts
                     </a>
-                    
-                    <a class="navbar-item" href="/">
-                        résumé
+
+                    <a class="navbar-item" href="/submit">
+                        submit
                     </a>
                 </div>
                 
                 <div class="navbar-end">
+                    {% if is_auth %}
+                    <a class="navbar-item" href="/users/{{ auth_user.id }}">
+                        {{ auth_user.name }}
+                    </a>
                     <div class="navbar-item">
                         <div class="buttons">
-                            {% if is_auth %}
                             <form action="/logout" method="POST">
-                                <input type="submit" class="button is-light" value="log out">
+                                <input type="submit" class="button is-info is-light" value="log out">
                             </form>
-                            {% else %}
-                            <a class="button is-success" href="/signup">
-                                <strong>sign up</strong>
-                            </a>
-                            <a class="button is-light" href="/login">
-                                log in
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
+                    {% else %}
+                    <div class="navbar-item">
+                        <div class="buttons">
+                            <a class="button is-success is-light" href="/login">
+                                log in
+                            </a>
+                            <a class="button is-info is-light" href="/signup">
+                                sign up
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </nav>
+
         {% for success in notifications.successes %}
-        <div class="notification is-success">
-            <button class="delete"></button>
-            <p class="has-text-centered has-text-weight-semibold">{{ success }}</p>
+        <div class="hero">
+            <div class="box notification is-success">
+                <button class="delete"></button>
+                <p class="has-text-centered has-text-weight-semibold">{{ success }}</p>
+            </div>
         </div>
         {% endfor %}
         {% for info in notifications.infos %}
-        <div class="notification is-info">
-            <button class="delete"></button>
-            <p class="has-text-centered has-text-weight-semibold">{{ info }}</p>
+        <div class="hero">
+            <div class="box notification is-info">
+                <button class="delete"></button>
+                <p class="has-text-centered has-text-weight-semibold">{{ info }}</p>
+            </div>
         </div>
         {% endfor %}
         {% for warn in notifications.warns %}
-        <div class="notification is-warning">
-            <button class="delete"></button>
-            <p class="has-text-centered has-text-weight-semibold">{{ warn }}</p>
+        <div class="hero">
+            <div class="box notification is-warning">
+                <button class="delete"></button>
+                <p class="has-text-centered has-text-weight-semibold">{{ warn }}</p>
+            </div>
         </div>
         {% endfor %}
         {% for error in notifications.errors %}
-        <div class="notification is-danger">
-            <button class="delete"></button>
-            <p class="has-text-centered has-text-weight-semibold">{{ error }}</p>
+        <div class="hero">
+            <div class="box notification is-danger">
+                <button class="delete"></button>
+                <p class="has-text-centered has-text-weight-semibold">{{ error }}</p>
+            </div>
         </div>
         {% endfor %}
-        <div class="columns">
+        <div class="box columns has-background-light">
         {% block content %}
         {% endblock %}
         </div>
         
+        <footer class="footer">
+            <div class="content is-small has-text-centered">
+                    <strong>effward.dev</strong> by <a href="https://effward.dev">effward</a>
+                <br>
+                    the source code is licensed
+                    <a href="http://opensource.org/licenses/mit-license.php">mit</a>
+                <br>
+                    the website content
+                    is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">cc by nc sa 4.0</a>.
+            </div>
+        </footer>
     </body>
 </html>

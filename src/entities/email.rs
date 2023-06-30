@@ -1,11 +1,10 @@
 use chrono::{NaiveDateTime, Utc};
 use email_address::*;
-use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
 
 use super::EntityError;
 
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct EmailEntity {
     pub id: u64,
     pub address: String,
@@ -21,14 +20,11 @@ pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, E
     let email_entity = try_get_by_address(pool, &email_lower).await?;
     match email_entity {
         Some(e) => Ok(e.id),
-        None => Ok(insert(pool, &email_lower).await?)
+        None => Ok(insert(pool, &email_lower).await?),
     }
 }
 
-async fn insert(
-    pool: &MySqlPool,
-    address: &String,
-) -> Result<u64, EntityError> {
+async fn insert(pool: &MySqlPool, address: &String) -> Result<u64, EntityError> {
     let created = Utc::now();
     let email_id = sqlx::query!(
         r#"
@@ -48,7 +44,7 @@ VALUES (?, ?)
 async fn try_get_by_address(
     pool: &MySqlPool,
     address: &String,
-    ) -> Result<Option<EmailEntity>, EntityError> {
+) -> Result<Option<EmailEntity>, EntityError> {
     let email_entity = sqlx::query_as!(
         EmailEntity,
         r#"

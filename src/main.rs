@@ -23,7 +23,7 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{health, home, login, logout, signup, submit};
+use crate::routes::{health, index, login, logout, post, posts, signup, submit, users};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()> {
                 secret_key.clone(),
             ))
             .wrap(Logger::default())
-            .route("/", web::get().to(home::get::home))
+            .route("/", web::get().to(index::get::index))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))
             .route("/login", web::get().to(login::get::login))
@@ -137,6 +137,9 @@ async fn main() -> std::io::Result<()> {
             .route("/logout", web::post().to(logout::post::process_logout))
             .route("/submit", web::get().to(submit::get::submit))
             .route("/submit", web::post().to(submit::post::process_submission))
+            .route("/users/{user}", web::get().to(users::get::users))
+            .route("/post/{post}", web::get().to(post::get::post))
+            .route("/posts", web::get().to(posts::get::posts))
             .route("/health", web::get().to(health::get::health))
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))

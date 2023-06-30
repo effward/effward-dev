@@ -4,19 +4,18 @@ use chrono::{NaiveDateTime, Utc};
 use hex::ToHex;
 use pbkdf2::pbkdf2_hmac_array;
 use secrecy::{ExposeSecret, Secret};
-use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use super::{email, EntityError, utils};
+use super::{email, utils, EntityError};
 
 pub const MIN_USERNAME_LENGTH: usize = 4;
 pub const MAX_USERNAME_LENGTH: usize = 32;
 pub const MIN_PASSWORD_LENGTH: usize = 8;
 pub const MAX_PASSWORD_LENGTH: usize = 256;
 
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct UserEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
@@ -35,10 +34,16 @@ pub async fn create(
     password: &Secret<String>,
 ) -> Result<u64, EntityError> {
     if password.expose_secret().len() > MAX_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password", "password is too long"));
+        return Err(EntityError::InvalidInput(
+            "password",
+            "password is too long",
+        ));
     }
     if password.expose_secret().len() < MIN_PASSWORD_LENGTH {
-        return Err(EntityError::InvalidInput("password", "password is too short"));
+        return Err(EntityError::InvalidInput(
+            "password",
+            "password is too short",
+        ));
     }
 
     let email_id = email::get_or_create_id(pool, email).await?;
@@ -76,17 +81,7 @@ pub async fn get_by_name_password(
     name: &String,
     password: &Secret<String>,
 ) -> Result<UserEntity, EntityError> {
-    let user_entity = sqlx::query_as!(
-        UserEntity,
-        r#"
-SELECT *
-FROM users
-WHERE name = ?
-        "#,
-        sanitize_name(name)?
-    )
-    .fetch_one(pool)
-    .await?;
+    let user_entity = get_by_name(pool, name).await?;
 
     // password verification
     let parts: Vec<&str> = user_entity.password.split(':').collect();
@@ -103,7 +98,42 @@ WHERE name = ?
     }
 }
 
-pub async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<UserEntity, EntityError> {
+pub async fn get_by_name(pool: &MySqlPool, name: &String) -> Result<UserEntity, EntityError> {
+    let user_entity = sqlx::query_as!(
+        UserEntity,
+        r#"
+SELECT *
+FROM users
+WHERE name = ?
+        "#,
+        sanitize_name(name)?
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(user_entity)
+}
+
+pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<UserEntity, EntityError> {
+    let user_entity = sqlx::query_as!(
+        UserEntity,
+        r#"
+SELECT *
+FROM users
+WHERE id = ?
+        "#,
+        id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(user_entity)
+}
+
+pub async fn get_by_public_id(
+    pool: &MySqlPool,
+    public_id: Uuid,
+) -> Result<UserEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
     let user_entity = sqlx::query_as!(
         UserEntity,

@@ -1,14 +1,14 @@
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum EntityError {
-    #[error("Internal error")]
+    #[error("internal error")]
     Internal(String),
-    #[error("Invalid input")]
+    #[error("invalid input")]
     InvalidInput(&'static str, &'static str),
-    #[error("Malformed data")]
+    #[error("malformed data")]
     MalformedData,
-    #[error("Entity not found")]
+    #[error("entity not found")]
     NotFound,
-    #[error("Duplicate key")]
+    #[error("duplicate key")]
     DuplicateKey,
 }
 

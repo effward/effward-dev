@@ -3,7 +3,7 @@
 {% block content %}
 <div class="column is-half is-offset-one-quarter">
     <div class="section">
-        <form action="/signup" method="POST">
+        <form class="box" action="/signup" method="POST">
         
             <div class="field">
                 <p class="control has-icons-left">
@@ -38,9 +38,17 @@
                 </p>
             </div>
             
-            <div class="field">
+            <div class="field is-grouped">
                 <div class="control">
                     <input type="submit" class="button is-success is-light" value="sign up">
+                </div>
+                <div class="control">
+                    <p>or</p>
+                </div>
+                <div class="control">
+                    <a class="button is-light is-small" href="/login">
+                        log in
+                    </a>
                 </div>
             </div>
             
