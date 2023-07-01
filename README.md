@@ -63,3 +63,13 @@ https://bulma.io/extensions/
 - bulma-ribbon / bulma-badge (notification counters)
 - bulma-timeline (alternate resume view?)
 - bulma-toast (make notifications float)
+
+### Vector images
+- @storyset on freepik: https://www.freepik.com/author/stories
+
+# Attribution
+
+- hero_bigfoot.svg (https://www.freepik.com/free-vector/bigfoot-concept-illustration_14204080.htm#page=2&position=33&from_view=author)
+- hero_forest.svg (https://www.freepik.com/free-vector/forest-concept-illustration_8426448.htm#page=2&position=12&from_view=author)
+- hero_bear-family.svg (https://www.freepik.com/free-vector/bear-family-concept-illustration_27637592.htm#from_view=detail_alsolike)
+- cherry-tree.svg (https://www.freepik.com/free-vector/cherry-tree-concept-illustration_29807797.htm#&position=2&from_view=author)

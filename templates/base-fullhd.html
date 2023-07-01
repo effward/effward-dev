@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block container %}
+<div class="container is-fullhd">
+    <div class="columns">
+    {% block content %}
+    {% endblock %}
+    </div>
+    {% include "footer.html" %}
+</div>
+{% endblock %}

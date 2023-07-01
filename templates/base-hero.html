@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block container %}
+<section class="hero-bg hero is-light is-fullheight-with-navbar">
+    <div class="hero-body">
+        <div class="container is-fluid">
+            <div class="columns">
+            {% block content %}
+            {% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="hero-foot">
+        <div class="content is-small has-text-centered pb-2">
+            <a href="https://www.freepik.com/free-vector/forest-concept-illustration_8426448.htm#page=2&position=12&from_view=author">Image by storyset</a> on Freepik
+        </div>
+    </div>
+</section>
+{% endblock %}

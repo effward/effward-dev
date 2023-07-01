@@ -3,6 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#f5f5f5">
+        <meta name="viewport" content="width=device-width">
         <title>{{ title }}</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
         <script src="https://kit.fontawesome.com/f5d73dca8d.js" crossorigin="anonymous"></script>
@@ -37,12 +39,22 @@
             });
         </script>
         <style>
-            article.media a:hover {
-                text-decoration: none;
+        .hero-bg {
+            background-image: url('/static/img/hero_bigfoot.svg');
+            background-position: top;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        @media (min-width: 1417px) {
+
+            .hero-bg {
+                background-size: initial; /* Force the image to its minimum width */
             }
+        
+        }
         </style>
     </head>
-    <body class="has-background-light">
+    <body class="has-background-light" style="min-height: 100%;">
         <nav class="navbar is-light" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
@@ -129,24 +141,11 @@
             </div>
         </div>
         {% endfor %}
-        <div class="columns">
-        {% block content %}
+
+        {% block container %}
         {% endblock %}
-        </div>
+
         
-        <footer class="footer has-background-light">
-            <div class="content is-small has-text-centered">
-                    <strong>effward.dev</strong> by <a href="https://effward.dev">effward</a>
-                <br>
-                    the
-                    <a href="https://github.com/effward/effward-dev">source code</a>
-                    is licensed <a href="https://opensource.org/license/mit/">mit</a>
-                <br>
-                    the website content
-                    is licensed <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">cc by nc sa 4.0</a>.
-                <br>
-                    <a class="button is-light is-small" href="https://www.paypal.com/donate/?hosted_button_id=2NW9M8A4Q2N82">donate</a>
-            </div>
-        </footer>
+
     </body>
 </html>

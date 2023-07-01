@@ -10,7 +10,7 @@ use crate::{
     routes::models::{self, PostSummary},
 };
 
-const POSTS_PER_PAGE: u8 = 5;
+const POSTS_PER_PAGE: u8 = 2;
 
 pub async fn index(
     session: TypedSession,

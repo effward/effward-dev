@@ -1,0 +1,35 @@
+<div class="card mb-2">
+    <a href="/post/{{ post.id }}">
+    <header class="card-header">
+        <p class="card-header-title p-2">
+            {{ post.title }}
+        </p>
+        <button class="card-header-icon p-2">
+            <span class="icon">
+                <i class="fas fa-file-lines"></i>
+            </span>
+        </button>
+    </header>
+    </a>
+
+    <div class="card-content px-4 py-2">
+        <div class="content">
+            <div class="block">
+                post preview
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="card-footer">
+        <p class="card-footer-item p-1">
+            <small><a href="/users/{{ post.author.id }}">{{ post.author.name }}</a></small>
+        </p>
+        <p class="card-footer-item p-1">
+            <small><a href="/post/{{ post.id }}">read more</a></small>
+        </p>
+        <p class="card-footer-item p-1">
+            <small><time datetime="{{ post.created }}">{{ post.created }}</time></small>
+        </p>
+    </footer>
+</div>

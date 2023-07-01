@@ -1,0 +1,30 @@
+{% extends "base-fullhd.html" %}
+
+{% block content %}
+<div class="column">
+    <div class="section pt-3">
+        <p class="title is-6 mb-4">{{ post.title }}</p>
+        <div class="card mb-2">
+            <div class="card-content px-4 py-2">
+                <div class="content">
+                    <div class="block">
+                        post preview
+                    </div>
+                </div>
+            </div>
+
+            <footer class="card-footer">
+                <p class="card-footer-item p-1">
+                    <small><a href="/users/{{ post.author.id }}">{{ post.author.name }}</a></small>
+                </p>
+                <p class="card-footer-item p-1">
+                    <small><a href="/post/{{ post.id }}">report</a></small>
+                </p>
+                <p class="card-footer-item p-1">
+                    <small><time datetime="{{ post.created }}">{{ post.created }}</time></small>
+                </p>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
