@@ -12,7 +12,7 @@ use actix_files::Files;
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
-use actix_web::middleware::{Logger, Compress};
+use actix_web::middleware::{Compress, Logger};
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::FlashMessagesFramework;
