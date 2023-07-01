@@ -8,10 +8,11 @@ mod entities;
 mod routes;
 
 use actix_cors::Cors;
+use actix_files::Files;
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
-use actix_web::middleware::Logger;
+use actix_web::middleware::{Compress, Logger};
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::FlashMessagesFramework;
@@ -58,7 +59,7 @@ async fn main() -> std::io::Result<()> {
     };
 
     warn!("🌎 Initializing Tera static templates...");
-    let tera = match Tera::new("static/templates/**/*") {
+    let tera = match Tera::new("templates/**/*") {
         Ok(t) => {
             warn!("🌎✅ Static templates initialized.");
             t
@@ -122,6 +123,7 @@ async fn main() -> std::io::Result<()> {
             .supports_credentials();
 
         App::new()
+            .wrap(Compress::default())
             .wrap(cors)
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(
@@ -141,6 +143,7 @@ async fn main() -> std::io::Result<()> {
             .route("/post/{post}", web::get().to(post::get::post))
             .route("/posts", web::get().to(posts::get::posts))
             .route("/health", web::get().to(health::get::health))
+            .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))
     })

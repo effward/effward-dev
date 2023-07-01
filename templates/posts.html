@@ -1,0 +1,12 @@
+{% extends "base-fullhd.html" %}
+
+{% block content %}
+<div class="column">
+    <div class="section pt-3">
+        <p class="title is-6 mb-4">recent posts</p>
+        {% for post in posts %}
+            {% include "post_summary.html" %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

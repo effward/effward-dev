@@ -10,7 +10,8 @@ COPY . .
 RUN cargo build --release
 
 WORKDIR /app/target/release
-COPY /static /app/target/release/static
+COPY /templates /app/target/release/templates
+COPY /public /app/target/release/public
 
 ENV DATABASE_URL=
 
