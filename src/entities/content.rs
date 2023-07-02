@@ -46,7 +46,7 @@ async fn insert_by_body_hash(
     content: &String,
     body_hash: &Vec<u8>,
 ) -> Result<u64, EntityError> {
-    let created = Utc::now();
+    let created = Utc::now().naive_utc();
     let content_id = sqlx::query!(
         r#"
 INSERT INTO contents (body, body_hash, created)

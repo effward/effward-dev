@@ -1,25 +1,26 @@
 use actix_web::http::header::LOCATION;
 use actix_web::HttpResponse;
+use actix_web_flash_messages::FlashMessage;
+use log::error;
 
-// Return an opaque 500 while preserving the error root's cause for logging.
-pub fn e500<T>(e: T) -> actix_web::Error
-where
-    T: std::fmt::Debug + std::fmt::Display + 'static,
-{
-    actix_web::error::ErrorInternalServerError(e)
-}
-
-// Return a 400 with the user-representation of the validation error as body.
-// The error root cause is preserved for logging purposes.
-pub fn e400<T: std::fmt::Debug + std::fmt::Display>(e: T) -> actix_web::Error
-where
-    T: std::fmt::Debug + std::fmt::Display + 'static,
-{
-    actix_web::error::ErrorBadRequest(e)
-}
+use crate::entities::EntityError;
 
 pub fn redirect(location: &str) -> HttpResponse {
     HttpResponse::SeeOther()
         .insert_header((LOCATION, location))
         .finish()
+}
+
+pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpResponse {
+    match error {
+        EntityError::NotFound => {
+            FlashMessage::debug(entity_type).send();
+            FlashMessage::error(format!("{} not found in database", entity_type)).send();
+            redirect("/error/404")
+        }
+        _ => {
+            error!("Entity Error: {:?}", error);
+            redirect("/error/500")
+        }
+    }
 }

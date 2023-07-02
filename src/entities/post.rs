@@ -45,7 +45,7 @@ pub async fn insert(
     };
 
     let public_id = Uuid::new_v4().into_bytes();
-    let created = Utc::now();
+    let created = Utc::now().naive_utc();
 
     let post_id = sqlx::query!(
         r#"

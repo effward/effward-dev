@@ -4,9 +4,11 @@ use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::routes::{
-    user_context::{user_context::build_user_context, TypedSession},
+    user_context::{session_state::TypedSession, user_context},
     utils,
 };
+
+const HERO_BG_CLASS: &str = "hero-bg-submit";
 
 pub async fn submit(
     session: TypedSession,
@@ -14,7 +16,14 @@ pub async fn submit(
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
-    let user_context = build_user_context(session, flash_messages, &pool, "submit").await;
+    let user_context = user_context::build(
+        session,
+        flash_messages,
+        &pool,
+        "submit",
+        Some(HERO_BG_CLASS),
+    )
+    .await;
 
     match user_context.auth_user {
         Some(_) => {

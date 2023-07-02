@@ -7,7 +7,7 @@ use sqlx::MySqlPool;
 use crate::{
     entities::post,
     routes::{
-        user_context::{user_context::get_auth_user_entity, TypedSession},
+        user_context::{session_state::TypedSession, user_context::get_auth_user_entity},
         utils,
     },
 };

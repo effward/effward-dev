@@ -10,11 +10,14 @@ use crate::{
     routes::models::{self, User},
 };
 
-use super::{TypedSession, UserContextError};
+use super::{session_state::TypedSession, UserContextError};
+
+const DEFAULT_HERO_BG_CLASS: &str = "hero-bg-landing";
 
 pub struct UserContext {
     pub auth_user: Option<User>,
     pub context: Context,
+    pub flash_messages: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -25,19 +28,47 @@ pub struct Notifications {
     pub successes: Vec<String>,
 }
 
-pub async fn build_user_context(
+pub fn get_empty(page_name: &str, image_path: Option<&str>) -> UserContext {
+    let mut context = Context::new();
+    insert_title(&mut context, page_name);
+    context.insert(
+        "notifications",
+        &Notifications {
+            errors: vec![],
+            warns: vec![],
+            infos: vec![],
+            successes: vec![],
+        },
+    );
+    context.insert("is_auth", &false);
+    insert_hero_bg_class(&mut context, image_path);
+
+    UserContext {
+        auth_user: None,
+        context,
+        flash_messages: vec![],
+    }
+}
+
+pub async fn build(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
     pool: &MySqlPool,
     page_name: &str,
+    image_path: Option<&str>,
 ) -> UserContext {
     let mut context = Context::new();
 
     insert_title(&mut context, page_name);
-    insert_notifications(&mut context, flash_messages);
+    let flash_messages = insert_notifications(&mut context, flash_messages);
     let auth_user = insert_auth_user(&mut context, session, pool).await;
+    insert_hero_bg_class(&mut context, image_path);
 
-    UserContext { auth_user, context }
+    UserContext {
+        auth_user,
+        context,
+        flash_messages,
+    }
 }
 
 pub async fn get_auth_user_entity(
@@ -59,15 +90,20 @@ fn insert_title(context: &mut Context, page_name: &str) {
     context.insert("title", &format!("effward.dev - {}", page_name));
 }
 
-fn insert_notifications(context: &mut Context, flash_messages: IncomingFlashMessages) {
+fn insert_notifications(
+    context: &mut Context,
+    flash_messages: IncomingFlashMessages,
+) -> Vec<String> {
     let mut errors: Vec<String> = vec![];
     let mut warns: Vec<String> = vec![];
     let mut infos: Vec<String> = vec![];
     let mut successes: Vec<String> = vec![];
+    let mut debugs: Vec<String> = vec![];
+
     for m in flash_messages.iter() {
         let content = String::from(m.content());
         match m.level() {
-            Level::Debug => (),
+            Level::Debug => debugs.push(content),
             Level::Info => infos.push(content),
             Level::Success => successes.push(content),
             Level::Warning => warns.push(content),
@@ -83,6 +119,8 @@ fn insert_notifications(context: &mut Context, flash_messages: IncomingFlashMess
             successes,
         },
     );
+
+    debugs
 }
 
 async fn insert_auth_user(
@@ -107,4 +145,13 @@ async fn insert_auth_user(
             None
         }
     }
+}
+
+fn insert_hero_bg_class(context: &mut Context, hero_bg_class: Option<&str>) {
+    let hero_bg_class = match hero_bg_class {
+        Some(h) => &h,
+        None => DEFAULT_HERO_BG_CLASS,
+    };
+
+    context.insert("hero_bg_class", hero_bg_class);
 }

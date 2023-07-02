@@ -66,10 +66,22 @@ https://bulma.io/extensions/
 
 ### Vector images
 - @storyset on freepik: https://www.freepik.com/author/stories
+- default avatar options? https://www.freepik.com/free-vector/set-linear-graphic-animal-heads_3438068.htm
 
 # Attribution
 
-- hero_bigfoot.svg (https://www.freepik.com/free-vector/bigfoot-concept-illustration_14204080.htm#page=2&position=33&from_view=author)
-- hero_forest.svg (https://www.freepik.com/free-vector/forest-concept-illustration_8426448.htm#page=2&position=12&from_view=author)
-- hero_bear-family.svg (https://www.freepik.com/free-vector/bear-family-concept-illustration_27637592.htm#from_view=detail_alsolike)
-- cherry-tree.svg (https://www.freepik.com/free-vector/cherry-tree-concept-illustration_29807797.htm#&position=2&from_view=author)
+## Image Attribution
+- hero_bigfoot.svg (https://www.freepik.com/free-vector/bigfoot-concept-illustration_14204080.htm)
+- hero_forest.svg (https://www.freepik.com/free-vector/forest-concept-illustration_8426448.htm)
+- hero_bear-family.svg (https://www.freepik.com/free-vector/bear-family-concept-illustration_27637592.htm)
+- cherry-tree.svg (https://www.freepik.com/free-vector/cherry-tree-concept-illustration_29807797.htm)
+- hero_404.svg (https://www.freepik.com/free-vector/404-error-with-landscape-concept-illustration_20602802.htm)
+- hero_500.svg (https://www.freepik.com/free-vector/loss-biodiversity-concept-illustration_23845297.htm)
+- hero_maintenance.svg (https://www.freepik.com/free-vector/computer-trouble-shooting-concept-illustration_18771510.htm)
+- hero_wip.svg (https://www.freepik.com/free-vector/software-code-testing-concept-illustration_21532465.htm)
+- hero_sunny-mountains.svg (https://www.freepik.com/free-vector/snowy-mountain-concept-illustration_33804223.htm)
+- hero_hiker.svg (https://www.freepik.com/free-vector/hiking-concept-illustration_8887094.htm)
+- hero_kayaking.svg (https://www.freepik.com/free-vector/kayaking-concept-illustration_26233242.htm)
+- hero_night-mountains.svg (https://www.freepik.com/free-vector/mountain-night-concept-illustration_33804220.htm)
+- hero_town.svg (https://www.freepik.com/free-vector/small-town-concept-illustration_12516925.htm)
+- hero_city.svg (https://www.freepik.com/free-vector/future-city-concept-illustration_24487818.htm)

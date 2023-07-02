@@ -1,0 +1,18 @@
+{% extends "base-hero.html" %}
+
+{% block hero_head %}
+<div class="container is-fullhd">
+    <div class="columns">
+        <div class="column"></div>
+        <div class="column is-narrow">
+            <div class="section">
+                <div class="box is-transparent">
+                    <p class="title is-4">error, {{ missing_type }} not found!</p>
+                    <p class="subtitle is-5"><strong>the {{ missing_type }} you were looking for doesn't exist</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="column"></div>
+    </div>
+</div>
+{% endblock %}

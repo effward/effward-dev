@@ -9,13 +9,14 @@ use crate::{
     entities::user,
     routes::{
         models,
-        user_context::{user_context::build_user_context, TypedSession},
+        user_context::{session_state::TypedSession, user_context},
+        utils,
     },
 };
 
-pub async fn users(
+pub async fn user(
     session: TypedSession,
-    flash_message: IncomingFlashMessages,
+    flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
@@ -28,24 +29,30 @@ pub async fn users(
             .unwrap(),
         Err(_) => match Uuid::try_parse(&path_user) {
             Ok(user_id) => user::get_by_public_id(&pool, user_id).await.unwrap(),
-            Err(_) => user::get_by_name(&pool, &path_user).await.unwrap(),
+            Err(_) => match user::get_by_name(&pool, &path_user).await {
+                Ok(u) => u,
+                Err(e) => {
+                    return utils::redirect_entity_error(e, "user");
+                }
+            },
         },
     };
 
     let user = models::translate_user(user_entity);
 
-    let mut user_context = build_user_context(
+    let mut user_context = user_context::build(
         session,
-        flash_message,
+        flash_messages,
         &pool,
         &format!("user - {}", user.name),
+        None,
     )
     .await;
 
     user_context.context.insert("user", &user);
 
     // TODO: handle error
-    let rendered = tera.render("users.html", &user_context.context).unwrap();
+    let rendered = tera.render("user.html", &user_context.context).unwrap();
 
     HttpResponse::Ok().body(rendered)
 }

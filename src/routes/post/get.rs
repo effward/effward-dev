@@ -9,13 +9,13 @@ use crate::{
     entities::post,
     routes::{
         models,
-        user_context::{user_context::build_user_context, TypedSession},
+        user_context::{session_state::TypedSession, user_context},
     },
 };
 
 pub async fn post(
     session: TypedSession,
-    flash_message: IncomingFlashMessages,
+    flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
@@ -36,11 +36,12 @@ pub async fn post(
         .await
         .unwrap();
 
-    let mut user_context = build_user_context(
+    let mut user_context = user_context::build(
         session,
-        flash_message,
+        flash_messages,
         &pool,
         &format!("post - {}", post.title),
+        None,
     )
     .await;
 

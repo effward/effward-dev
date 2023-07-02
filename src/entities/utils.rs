@@ -15,5 +15,5 @@ pub fn sanitize_text(
         return Err(EntityError::InvalidInput(param_name, "too long"));
     }
 
-    Ok(escaped.to_lowercase())
+    Ok(escaped.to_string())
 }

@@ -7,7 +7,7 @@ use sqlx::MySqlPool;
 
 use crate::{
     entities::{user, EntityError},
-    routes::{models, user_context::TypedSession, utils},
+    routes::{models, user_context::session_state::TypedSession, utils},
 };
 
 #[derive(Debug, Deserialize)]

@@ -25,7 +25,7 @@ pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, E
 }
 
 async fn insert(pool: &MySqlPool, address: &String) -> Result<u64, EntityError> {
-    let created = Utc::now();
+    let created = Utc::now().naive_utc();
     let email_id = sqlx::query!(
         r#"
 INSERT INTO emails (address, created)
