@@ -3,7 +3,6 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use shortguid::ShortGuid;
 use sqlx::MySqlPool;
 use tera::Tera;
-use uuid::Uuid;
 
 use crate::{
     entities::user,
@@ -24,17 +23,17 @@ pub async fn user(
     // TODO: handle errors
     let path_user = path.into_inner();
     let user_entity = match ShortGuid::try_parse(&path_user) {
-        Ok(user_id) => user::get_by_public_id(&pool, *user_id.as_uuid())
-            .await
-            .unwrap(),
-        Err(_) => match Uuid::try_parse(&path_user) {
-            Ok(user_id) => user::get_by_public_id(&pool, user_id).await.unwrap(),
-            Err(_) => match user::get_by_name(&pool, &path_user).await {
-                Ok(u) => u,
-                Err(e) => {
-                    return utils::redirect_entity_error(e, "user");
-                }
-            },
+        Ok(user_id) => match user::get_by_public_id(&pool, *user_id.as_uuid()).await {
+            Ok(u) => u,
+            Err(entity_error) => {
+                return utils::redirect_entity_error(entity_error, "user");
+            }
+        },
+        Err(_) => match user::get_by_name(&pool, &path_user).await {
+            Ok(u) => u,
+            Err(e) => {
+                return utils::redirect_entity_error(e, "user");
+            }
         },
     };
 

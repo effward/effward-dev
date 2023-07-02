@@ -45,14 +45,11 @@ pub async fn do_login_and_redirect(
                 }
                 Err(e) => {
                     error!("Error inserting into session: {:?}", e);
-                    login_error_redirect(LoginErrorCode::Unknown)
+                    login_error_redirect(EntityError::Internal(e.to_string()))
                 }
             }
         }
-        Err(entity_error) => {
-            let error_code = convert_error(entity_error);
-            login_error_redirect(error_code)
-        }
+        Err(entity_error) => login_error_redirect(entity_error),
     }
 }
 
@@ -64,32 +61,25 @@ enum LoginErrorCode {
     Unknown,
 }
 
-fn login_error_redirect(error_code: LoginErrorCode) -> HttpResponse {
-    let error_message = get_error_message(error_code);
-    FlashMessage::error(error_message).send();
-    utils::redirect("/login")
-}
-
-fn convert_error(entity_error: EntityError) -> LoginErrorCode {
-    match entity_error {
-        EntityError::Internal(err) => {
-            error!("🔥 internal error: {}", err);
-            LoginErrorCode::Unknown
-        }
+fn login_error_redirect(entity_error: EntityError) -> HttpResponse {
+    let error_code = match entity_error.to_owned() {
+        EntityError::Internal(_) => return utils::redirect_entity_error(entity_error, "user"),
         EntityError::InvalidInput(_, _) => LoginErrorCode::InvalidPassword,
         EntityError::MalformedData => LoginErrorCode::MalformedPassword,
         EntityError::NotFound => LoginErrorCode::InvalidUsername,
         EntityError::DuplicateKey => LoginErrorCode::Unknown,
-    }
+    };
+
+    let error_message = get_error_message(error_code);
+
+    utils::error_redirect("/login", error_message)
 }
 
-fn get_error_message(error_code: LoginErrorCode) -> String {
-    let error_message = match error_code {
+fn get_error_message(error_code: LoginErrorCode) -> &'static str {
+    match error_code {
         LoginErrorCode::InvalidUsername => "incorrect username and/or password",
         LoginErrorCode::InvalidPassword => "incorrect password",
         LoginErrorCode::MalformedPassword => "password corrupted, please reset password below",
         LoginErrorCode::Unknown => "an error has ocurred, please try again in a few minutes and/or contact the site administrator",
-    };
-
-    return error_message.to_owned();
+    }
 }

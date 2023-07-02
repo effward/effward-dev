@@ -3,13 +3,13 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use shortguid::ShortGuid;
 use sqlx::MySqlPool;
 use tera::Tera;
-use uuid::Uuid;
 
 use crate::{
     entities::post,
     routes::{
         models,
         user_context::{session_state::TypedSession, user_context},
+        utils,
     },
 };
 
@@ -23,12 +23,14 @@ pub async fn post(
     // TODO: handle errors
     let path_post = path.into_inner();
     let post_entity = match ShortGuid::try_parse(&path_post) {
-        Ok(post_id) => post::get_by_public_id(&pool, *post_id.as_uuid())
-            .await
-            .unwrap(),
+        Ok(post_id) => match post::get_by_public_id(&pool, *post_id.as_uuid()).await {
+            Ok(p) => p,
+            Err(entity_error) => {
+                return utils::redirect_entity_error(entity_error, "post");
+            }
+        },
         Err(_) => {
-            let post_id = Uuid::try_parse(&path_post).unwrap();
-            post::get_by_public_id(&pool, post_id).await.unwrap()
+            return utils::error_redirect("/error/404", "invalid post uuid");
         }
     };
 

@@ -34,9 +34,10 @@ pub async fn process_submission(
         )
         .await
         {
-            Ok(post_id) => {
+            Ok(_post_id) => {
                 // TODO: Redirect to post page (after creating post page)
-                HttpResponse::Ok().body(format!("Posted submission: {}", post_id))
+                FlashMessage::success("new post successfully submitted").send();
+                utils::redirect("/posts")
             }
             Err(entity_error) => {
                 error!("Entity Error creating post: {:?}", entity_error);
@@ -51,8 +52,7 @@ pub async fn process_submission(
         },
         Err(e) => {
             error!("Error getting authenticated user: {:?}", e);
-            FlashMessage::error("you must be logged in to submit posts").send();
-            utils::redirect("/login")
+            utils::error_redirect("/login", "you must be logged in to submit posts")
         }
     }
 }

@@ -11,15 +11,22 @@ pub fn redirect(location: &str) -> HttpResponse {
         .finish()
 }
 
+pub fn error_redirect(location: &str, error_message: &str) -> HttpResponse {
+    FlashMessage::error(error_message).send();
+    redirect(location)
+}
+
 pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpResponse {
     match error {
         EntityError::NotFound => {
             FlashMessage::debug(entity_type).send();
-            FlashMessage::error(format!("{} not found in database", entity_type)).send();
-            redirect("/error/404")
+            error_redirect(
+                "/error/404",
+                &format!("{} not found in database", entity_type),
+            )
         }
         _ => {
-            error!("Entity Error: {:?}", error);
+            error!("🔥 Entity Error: {:?}", error);
             redirect("/error/500")
         }
     }
