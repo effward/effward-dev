@@ -8,19 +8,21 @@ use crate::{
     entities::{self, post::PostEntity},
     routes::{
         models::{self, PostSummary},
-        user_context::{user_context::build_user_context, TypedSession},
+        user_context::{session_state::TypedSession, user_context},
     },
 };
 
 const POSTS_PER_PAGE: u8 = 15;
+const HERO_BG_CLASS: &str = "hero-bg-posts";
 
 pub async fn posts(
     session: TypedSession,
-    flash_message: IncomingFlashMessages,
+    flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
-    let mut user_context = build_user_context(session, flash_message, &pool, "posts").await;
+    let mut user_context =
+        user_context::build(session, flash_messages, &pool, "posts", Some(HERO_BG_CLASS)).await;
 
     let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
 

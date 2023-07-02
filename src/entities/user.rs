@@ -54,7 +54,7 @@ pub async fn insert(
     let salt = salt_uuid[..6].as_bytes();
     let password = hash_password(password, salt);
 
-    let created = Utc::now();
+    let created = Utc::now().naive_utc();
 
     let user_id = sqlx::query!(
         r#"
@@ -164,5 +164,8 @@ fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
 }
 
 fn sanitize_name(name: &String) -> Result<String, EntityError> {
-    utils::sanitize_text(name, MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH, "name")
+    Ok(
+        utils::sanitize_text(name, MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH, "name")?
+            .to_lowercase(),
+    )
 }

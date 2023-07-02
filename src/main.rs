@@ -12,10 +12,12 @@ use actix_files::Files;
 use actix_session::storage::RedisSessionStore;
 use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
-use actix_web::middleware::{Compress, Logger};
+use actix_web::http::StatusCode;
+use actix_web::middleware::{Compress, ErrorHandlers, Logger};
+use actix_web::web::scope;
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
-use actix_web_flash_messages::FlashMessagesFramework;
+use actix_web_flash_messages::{FlashMessagesFramework, Level};
 use dotenv::dotenv;
 use env_logger;
 use log::{error, warn};
@@ -24,7 +26,7 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{health, index, login, logout, post, posts, signup, submit, users};
+use crate::routes::{error, health, index, login, logout, post, posts, signup, submit, user};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -83,7 +85,9 @@ async fn main() -> std::io::Result<()> {
     };
     let secret_key = Key::from(hmac_key.as_bytes());
     let message_store = CookieMessageStore::builder(secret_key.clone()).build();
-    let message_framework = FlashMessagesFramework::builder(message_store).build();
+    let message_framework = FlashMessagesFramework::builder(message_store)
+        .minimum_level(Level::Debug)
+        .build();
     warn!("💡✅ Flash Message Framework initialized.");
 
     warn!("🗝️ Connecting to redis...");
@@ -131,6 +135,14 @@ async fn main() -> std::io::Result<()> {
                 secret_key.clone(),
             ))
             .wrap(Logger::default())
+            .wrap(
+                ErrorHandlers::new()
+                    .default_handler(error::internal::get::render_internal)
+                    .handler(
+                        StatusCode::NOT_FOUND,
+                        error::not_found::get::render_not_found,
+                    ),
+            )
             .route("/", web::get().to(index::get::index))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))
@@ -139,10 +151,15 @@ async fn main() -> std::io::Result<()> {
             .route("/logout", web::post().to(logout::post::process_logout))
             .route("/submit", web::get().to(submit::get::submit))
             .route("/submit", web::post().to(submit::post::process_submission))
-            .route("/users/{user}", web::get().to(users::get::users))
+            .route("/user/{user}", web::get().to(user::get::user))
             .route("/post/{post}", web::get().to(post::get::post))
             .route("/posts", web::get().to(posts::get::posts))
             .route("/health", web::get().to(health::get::health))
+            .service(
+                scope("/error")
+                    .route("/404", web::get().to(error::not_found::get::not_found))
+                    .route("/500", web::get().to(error::internal::get::internal)),
+            )
             .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))

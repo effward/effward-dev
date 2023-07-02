@@ -4,7 +4,7 @@ use log::error;
 use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::routes::user_context::{user_context::build_user_context, TypedSession};
+use crate::routes::user_context::{session_state::TypedSession, user_context};
 use crate::{
     entities::{self, post::PostEntity},
     routes::models::{self, PostSummary},
@@ -14,11 +14,11 @@ const POSTS_PER_PAGE: u8 = 2;
 
 pub async fn index(
     session: TypedSession,
-    flash_message: IncomingFlashMessages,
+    flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
-    let mut user_context = build_user_context(session, flash_message, &pool, "home").await;
+    let mut user_context = user_context::build(session, flash_messages, &pool, "home", None).await;
 
     let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
 

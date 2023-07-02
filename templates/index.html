@@ -1,20 +1,25 @@
 {% extends "base-hero.html" %}
 
-{% block content %}
-<div class="column is-4">
-    <div class="section">
-        <div class="">
-            <p class="title is-4">hello, {{ name }}!</p>
-            <p class="subtitle is-5">welcome to <strong>effward.dev</strong></p>
+{% block hero_body %}
+<div class="container is-fullhd">
+    <div class="columns">
+        <div class="column is-narrow">
+            <div class="section">
+                <div class="box is-transparent is-hover">
+                    <p class="title is-4">hello, {{ name }}!</p>
+                    <p class="subtitle is-5">welcome to <strong>effward.dev</strong></p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<div class="column is-4 is-offset-4">
-    <div class="section p-2">
-        <p class="title is-6 mb-3">recent posts</p>
-        {% for post in posts %}
-            {% include "post_summary.html" %}
-        {% endfor %}
+        <div class="column"></div>
+        <div class="column is-4">
+            <div class="section p-3">
+                <p class="title is-6 mb-3">recent posts</p>
+                {% for post in posts %}
+                    {% include "post_summary.html" %}
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

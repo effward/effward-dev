@@ -13,7 +13,9 @@ use crate::{
         },
         EntityError,
     },
-    routes::{login::post::do_login_and_redirect, user_context::TypedSession, utils},
+    routes::{
+        login::post::do_login_and_redirect, user_context::session_state::TypedSession, utils,
+    },
 };
 
 #[derive(Debug, Deserialize)]
@@ -35,10 +37,7 @@ pub async fn process_signup(
             FlashMessage::success("successfully signed up").send();
             do_login_and_redirect(session, pool, &data.username, &data.password).await
         }
-        Err(entity_error) => {
-            let error_code = convert_error(entity_error);
-            signup_error_redirect(error_code)
-        }
+        Err(entity_error) => signup_error_redirect(entity_error),
     }
 }
 
@@ -51,18 +50,9 @@ pub enum SignupErrorCode {
     Unknown,
 }
 
-fn signup_error_redirect(error_code: SignupErrorCode) -> HttpResponse {
-    let error_message = get_error_message(error_code);
-    FlashMessage::error(error_message).send();
-    utils::redirect("/signup")
-}
-
-fn convert_error(entity_error: EntityError) -> SignupErrorCode {
-    match entity_error {
-        EntityError::Internal(err) => {
-            error!("process_signup error: {}", err);
-            SignupErrorCode::Unknown
-        }
+fn signup_error_redirect(entity_error: EntityError) -> HttpResponse {
+    let error_code = match entity_error.to_owned() {
+        EntityError::Internal(_) => return utils::redirect_entity_error(entity_error, "user"),
         EntityError::InvalidInput(param, _) => match param {
             "email" => SignupErrorCode::InvalidEmail,
             "name" => SignupErrorCode::InvalidUsername,
@@ -72,7 +62,11 @@ fn convert_error(entity_error: EntityError) -> SignupErrorCode {
         EntityError::MalformedData => SignupErrorCode::Unknown,
         EntityError::NotFound => SignupErrorCode::Unknown,
         EntityError::DuplicateKey => SignupErrorCode::UserAlreadyExists,
-    }
+    };
+
+    let error_message = get_error_message(error_code);
+
+    utils::error_redirect("/signup", &error_message)
 }
 
 fn get_error_message(error_code: SignupErrorCode) -> String {
@@ -84,6 +78,7 @@ fn get_error_message(error_code: SignupErrorCode) -> String {
         "invalid password, min length {} characters, max length {} characters",
         MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH
     );
+
     let error_message = match error_code {
         SignupErrorCode::InvalidUsername => &invalid_user,
         SignupErrorCode::InvalidEmail => "invalid email, please enter a valid email address",

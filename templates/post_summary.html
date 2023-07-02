@@ -1,35 +1,51 @@
-<div class="card mb-2">
-    <a href="/post/{{ post.id }}">
-    <header class="card-header">
-        <p class="card-header-title p-2">
-            {{ post.title }}
-        </p>
-        <button class="card-header-icon p-2">
-            <span class="icon">
-                <i class="fas fa-file-lines"></i>
-            </span>
-        </button>
-    </header>
-    </a>
-
-    <div class="card-content px-4 py-2">
+<div class="box is-barely-transparent is-hover my-1 px-2 py-1">
+  <article class="media">
+    <div class="media-content">
+      <a href="/post/{{ post.id }}">  
         <div class="content">
-            <div class="block">
-                post preview
-            </div>
+        
+          <strong>{{ post.title }}</strong>
+          <p class="subtitle is-6 mx-2 mb-3">
+            post preview
+          </p>
         </div>
+      </a>
+      
+      <nav class="level is-mobile mt-0 my-1">
+        <div class="level-left">
+          <p class="level-item is-small" aria-label="{{ post.created }}">
+            <span class="icon is-small mr-2">
+              <i class="fas fa-calendar" aria-hidden="true"></i>
+            </span>
+            {{ post.created_pretty }} ago
+          </p>
+        </div>
+        <div class="level-right">
+            <a href="/user/{{ post.author.id }}" class="level-item is-small" aria-label="{{ post.author.name }}">
+            {{ post.author.name }}
+            <span class="icon is-small ml-2">
+              <i class="fas fa-user" aria-hidden="true"></i>
+            </span>
+          </a>
+        </div>
+      </nav>
+      <nav class="level is-mobile">
+        <div class="level-left">
+          <a href="/post/{{ post.id }}" class="level-item is-small" aria-label="view comments">
+            <span class="icon is-small mr-2">
+              <i class="fas fa-comment-dots pr1" aria-hidden="true"></i>
+            </span>
+            comments
+          </a>
+        </div>
+        <div class="level-right">
+          <a class="level-item is-small" aria-label="share">
+            <span class="icon is-small ml-2">
+              <i class="fas fa-share-nodes" aria-hidden="true"></i>
+            </span>
+          </a>
+        </div>
+      </nav>
     </div>
-
-
-    <footer class="card-footer">
-        <p class="card-footer-item p-1">
-            <small><a href="/users/{{ post.author.id }}">{{ post.author.name }}</a></small>
-        </p>
-        <p class="card-footer-item p-1">
-            <small><a href="/post/{{ post.id }}">read more</a></small>
-        </p>
-        <p class="card-footer-item p-1">
-            <small><time datetime="{{ post.created }}">{{ post.created }}</time></small>
-        </p>
-    </footer>
+  </article>
 </div>

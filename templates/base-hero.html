@@ -1,20 +1,35 @@
 {% extends "base.html" %}
 
 {% block container %}
-<section class="hero-bg hero is-light is-fullheight-with-navbar">
-    <div class="hero-body">
-        <div class="container is-fluid">
-            <div class="columns">
-            {% block content %}
-            {% endblock %}
-            </div>
-        </div>
+<section class="{{ hero_bg_class }} hero is-fullheight-with-navbar">
+    <div class="hero-head">
+    {% block hero_head %}
+    {% endblock %}
     </div>
-    
+    <div class="hero-body">
+    {% block hero_body %}
+    {% endblock %}
+
+    </div>
+
     <div class="hero-foot">
-        <div class="content is-small has-text-centered pb-2">
-            <a href="https://www.freepik.com/free-vector/forest-concept-illustration_8426448.htm#page=2&position=12&from_view=author">Image by storyset</a> on Freepik
-        </div>
+        <nav class="notification level is-mobile p-0 is-very-transparent">
+            <div class="level-item content is-small has-text-centered">
+                <a href="https://github.com/effward/effward-dev">source</a>
+            </div>
+            <div class="level-item content is-small has-text-centered">
+                <a href="https://www.paypal.com/donate/?hosted_button_id=2NW9M8A4Q2N82">donate</a>
+            </div>
+            <div class="level-item content is-small has-text-centered">
+                img by <a href="https://www.freepik.com/author/stories" style="padding-left: 0.25em">@storyset</a>
+            </div>
+            <div class="level-item content is-small has-text-centered">
+                <a href="https://opensource.org/license/mit/">license</a>
+            </div>
+            <div class="level-item content is-small has-text-centered">
+                <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">content</a>
+            </div>
+        </nav>
     </div>
 </section>
 {% endblock %}
