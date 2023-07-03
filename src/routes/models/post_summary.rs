@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use serde::Serialize;
 use sqlx::MySqlPool;
 use std::cmp;
@@ -59,37 +59,4 @@ pub async fn translate_post_summary(
         post_preview,
         comment_count,
     })
-}
-
-pub fn format_relative_timespan(datetime: NaiveDateTime) -> String {
-    let now = Utc::now().naive_utc();
-    let difference = now - datetime;
-
-    let minutes = difference.num_minutes();
-    if minutes < 60 {
-        return format!("{} minutes", minutes);
-    }
-
-    let hours = difference.num_hours();
-    if hours < 24 {
-        return format!("{} hours", hours);
-    }
-
-    let days = difference.num_days();
-    if days < 7 {
-        return format!("{} days", days);
-    }
-
-    let weeks = days / 7;
-    if weeks < 4 {
-        return format!("{} weeks", weeks);
-    }
-
-    let months = days / 30;
-    if months < 12 {
-        return format!("{} months", months);
-    }
-
-    let years = months / 12;
-    format!("{} years", years)
 }

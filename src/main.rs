@@ -145,14 +145,6 @@ async fn main() -> std::io::Result<()> {
                 secret_key.clone(),
             ))
             .wrap(Logger::default())
-            .wrap(
-                ErrorHandlers::new()
-                    .default_handler(error::internal::get::render_internal)
-                    .handler(
-                        StatusCode::NOT_FOUND,
-                        error::not_found::get::render_not_found,
-                    ),
-            )
             .route("/", web::get().to(index::get::index))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))

@@ -1,7 +1,7 @@
 use actix_web::{
     dev::ServiceResponse, middleware::ErrorHandlerResponse, web, HttpResponse, Responder, Result,
 };
-use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
+use actix_web_flash_messages::IncomingFlashMessages;
 use sqlx::MySqlPool;
 use tera::{Context, Tera};
 
