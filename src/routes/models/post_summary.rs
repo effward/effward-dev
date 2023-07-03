@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use std::cmp;
 
 use chrono::NaiveDateTime;
@@ -18,6 +19,7 @@ pub struct PostSummary {
     pub title: String,
     pub created: NaiveDateTime,
     pub created_pretty: String,
+<<<<<<< HEAD
     pub link: Option<String>,
     pub content: Option<String>,
     pub post_preview: Option<String>,
@@ -56,6 +58,7 @@ pub async fn translate_post_summary(
         author,
         title: post_entity.title.to_owned(),
         created: post_entity.created,
+<<<<<<< HEAD
         created_pretty: utils::format_relative_timespan(post_entity.created),
         link: post_entity.link.to_owned(),
         content,
