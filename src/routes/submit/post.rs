@@ -36,12 +36,15 @@ pub async fn process_submission(
             Ok(_post_id) => {
                 // TODO: Redirect to post page (after creating post page)
                 utils::success_redirect("/posts", "new post successfully submitted")
-            },
+            }
             Err(entity_error) => {
                 error!("Entity Error creating post: {:?}", entity_error);
 
                 // TODO: preserve form contents on redirect so that submission isn't lost
-                utils::warning_redirect("/submit", "something went wrong submitting your post, please try again")
+                utils::warning_redirect(
+                    "/submit",
+                    "something went wrong submitting your post, please try again",
+                )
             }
         },
         Err(e) => {

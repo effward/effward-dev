@@ -1,10 +1,10 @@
-use std::cmp;
 use chrono::NaiveDateTime;
 use serde::Serialize;
 use sqlx::MySqlPool;
+use std::cmp;
 use substring::Substring;
 
-use crate::entities::{post::PostEntity, user, EntityError, content, comment};
+use crate::entities::{comment, content, post::PostEntity, user, EntityError};
 
 use super::{translate_user, utils, User};
 
@@ -26,7 +26,7 @@ pub struct PostSummary {
 pub async fn translate_post_summary(
     pool: &MySqlPool,
     post_entity: &PostEntity,
-    ) -> Result<PostSummary, EntityError> {
+) -> Result<PostSummary, EntityError> {
     let author_entity = user::get_by_id(pool, post_entity.author_id).await?;
     let author = translate_user(author_entity);
 
@@ -42,11 +42,9 @@ pub async fn translate_post_summary(
             }
             post_preview = Some(preview);
             Some(content.body)
-        },
+        }
         None => None,
     };
-
-
 
     let comment_count = comment::get_count_by_post_id(pool, &post_entity.id).await?;
 

@@ -2,8 +2,7 @@ use chrono::{NaiveDateTime, Utc};
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use super::{EntityError, content};
-
+use super::{content, EntityError};
 
 #[derive(Clone, Debug, sqlx::FromRow)]
 pub struct CommentEntity {
@@ -25,14 +24,14 @@ pub async fn insert(
     post_id: &u64,
     parent_id: &Option<u64>,
     content: &str,
-    ) -> Result<u64, EntityError> {
+) -> Result<u64, EntityError> {
     // TODO: verify if author is a valid user?
 
     if content.len() < MIN_COMMENT_LENGTH {
         return Err(EntityError::InvalidInput(
             "content",
-            "comment's content is too short")
-        );
+            "comment's content is too short",
+        ));
     }
 
     let content_id = content::get_or_create_id(pool, content).await?;
@@ -65,7 +64,7 @@ VALUES
 pub async fn get_by_public_id(
     pool: &MySqlPool,
     public_id: Uuid,
-    ) -> Result<CommentEntity, EntityError> {
+) -> Result<CommentEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
     let comment_entity = sqlx::query_as!(
         CommentEntity,
@@ -82,10 +81,7 @@ WHERE public_id = ?
     Ok(comment_entity)
 }
 
-pub async fn get_count_by_post_id(
-    pool: &MySqlPool,
-    post_id: &u64,
-) -> Result<i64, EntityError> {
+pub async fn get_count_by_post_id(pool: &MySqlPool, post_id: &u64) -> Result<i64, EntityError> {
     let count = sqlx::query!(
         r#"
 SELECT
@@ -94,8 +90,10 @@ FROM comments
 WHERE post_id = ?
         "#,
         post_id
-        ).fetch_one(pool).await?;
-    
+    )
+    .fetch_one(pool)
+    .await?;
+
     Ok(count.count)
 }
 
@@ -108,9 +106,10 @@ pub async fn get_by_post_id_parent_id(
 ) -> Result<Vec<CommentEntity>, EntityError> {
     let comment_entities = match parent_id {
         Some(parent_id) => match start_index {
-            Some(start_index) => sqlx::query_as!(
-                CommentEntity,
-                r#"
+            Some(start_index) => {
+                sqlx::query_as!(
+                    CommentEntity,
+                    r#"
 SELECT *
 FROM `comments`
 WHERE
@@ -121,14 +120,18 @@ ORDER BY
     `id` ASC
 LIMIT ?
                 "#,
-                post_id,
-                parent_id,
-                start_index,
-                count
-                ).fetch_all(pool).await?,
-            None => sqlx::query_as!(
-                CommentEntity,
-                r#"
+                    post_id,
+                    parent_id,
+                    start_index,
+                    count
+                )
+                .fetch_all(pool)
+                .await?
+            }
+            None => {
+                sqlx::query_as!(
+                    CommentEntity,
+                    r#"
 SELECT *
 FROM `comments`
 WHERE
@@ -138,15 +141,19 @@ ORDER BY
     `id` ASC
 LIMIT ?
                 "#,
-                post_id,
-                parent_id,
-                count
-                ).fetch_all(pool).await?,
+                    post_id,
+                    parent_id,
+                    count
+                )
+                .fetch_all(pool)
+                .await?
+            }
         },
         None => match start_index {
-            Some(start_index) => sqlx::query_as!(
-                CommentEntity,
-                r#"
+            Some(start_index) => {
+                sqlx::query_as!(
+                    CommentEntity,
+                    r#"
 SELECT *
 FROM `comments`
 WHERE
@@ -157,13 +164,17 @@ ORDER BY
     `id` ASC
 LIMIT ?
                 "#,
-                post_id,
-                start_index,
-                count
-                ).fetch_all(pool).await?,
-            None => sqlx::query_as!(
-                CommentEntity,
-                r#"
+                    post_id,
+                    start_index,
+                    count
+                )
+                .fetch_all(pool)
+                .await?
+            }
+            None => {
+                sqlx::query_as!(
+                    CommentEntity,
+                    r#"
 SELECT *
 FROM `comments`
 WHERE
@@ -173,11 +184,14 @@ ORDER BY
     `id` ASC
 LIMIT ?
                 "#,
-                post_id,
-                count
-                ).fetch_all(pool).await?,
-        }
+                    post_id,
+                    count
+                )
+                .fetch_all(pool)
+                .await?
+            }
+        },
     };
-    
+
     Ok(comment_entities)
 }

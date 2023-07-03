@@ -36,9 +36,7 @@ pub async fn post(
         }
     };
 
-    let post = models::translate_post(&pool, &post_entity)
-        .await
-        .unwrap();
+    let post = models::translate_post(&pool, &post_entity).await.unwrap();
 
     let mut user_context = user_context::build(
         session,

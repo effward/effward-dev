@@ -26,7 +26,9 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{error, health, index, login, logout, post, posts, signup, submit, user, comment};
+use crate::routes::{
+    comment, error, health, index, login, logout, post, posts, signup, submit, user,
+};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -131,11 +133,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(
                 ErrorHandlers::new()
-                        .default_handler(error::generic::get::render_generic)
-                        .handler(
-                            StatusCode::NOT_FOUND,
-                            error::not_found::get::render_not_found,
-                        ),
+                    .default_handler(error::generic::get::render_generic)
+                    .handler(
+                        StatusCode::NOT_FOUND,
+                        error::not_found::get::render_not_found,
+                    ),
             )
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(

@@ -1,11 +1,14 @@
 use actix_web::{
     dev::ServiceResponse, middleware::ErrorHandlerResponse, web, HttpResponse, Responder, Result,
 };
-use actix_web_flash_messages::{IncomingFlashMessages, FlashMessage};
+use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
 use sqlx::MySqlPool;
 use tera::{Context, Tera};
 
-use crate::routes::{user_context::{session_state::TypedSession, user_context}, utils};
+use crate::routes::{
+    user_context::{session_state::TypedSession, user_context},
+    utils,
+};
 
 const PAGE_NAME: &str = "error - internal";
 const HERO_BG_CLASS: &str = "hero-bg-500";
@@ -35,8 +38,11 @@ pub fn render_generic<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse
     // TODO: use session to get current user for navbar
 
     let response = match response.error() {
-        Some(error) => utils::error_redirect("/error/generic", &format!("{}: {}", response.status(), error)),
-        None => utils::error_redirect("/error/generic", &format!("{}", response.status()))
+        Some(error) => utils::error_redirect(
+            "/error/generic",
+            &format!("{}: {}", response.status(), error),
+        ),
+        None => utils::error_redirect("/error/generic", &format!("{}", response.status())),
     };
 
     Ok(ErrorHandlerResponse::Response(
