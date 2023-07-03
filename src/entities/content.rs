@@ -16,7 +16,7 @@ pub struct ContentEntity {
     pub created: NaiveDateTime,
 }
 
-pub async fn get_or_create_id(pool: &MySqlPool, content: &String) -> Result<u64, EntityError> {
+pub async fn get_or_create_id(pool: &MySqlPool, content: &str) -> Result<u64, EntityError> {
     let body_hash = hash_content(content)?;
     let content_entity = try_get_by_body_hash(pool, content, &body_hash).await?;
 
@@ -28,14 +28,30 @@ pub async fn get_or_create_id(pool: &MySqlPool, content: &String) -> Result<u64,
     Ok(content_id)
 }
 
-pub async fn insert(pool: &MySqlPool, content: &String) -> Result<u64, EntityError> {
+pub async fn insert(pool: &MySqlPool, content: &str) -> Result<u64, EntityError> {
     let body_hash = hash_content(content)?;
     insert_by_body_hash(pool, content, &body_hash).await
 }
 
+pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<ContentEntity, EntityError> {
+    let content_entity = sqlx::query_as!(
+        ContentEntity,
+        r#"
+SELECT *
+FROM contents
+WHERE id = ?
+        "#,
+        id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(content_entity)
+}
+
 pub async fn get_by_content(
     pool: &MySqlPool,
-    content: &String,
+    content: &str,
 ) -> Result<Option<ContentEntity>, EntityError> {
     let body_hash = hash_content(content)?;
     try_get_by_body_hash(pool, content, &body_hash).await
@@ -43,7 +59,7 @@ pub async fn get_by_content(
 
 async fn insert_by_body_hash(
     pool: &MySqlPool,
-    content: &String,
+    content: &str,
     body_hash: &Vec<u8>,
 ) -> Result<u64, EntityError> {
     let created = Utc::now().naive_utc();
@@ -65,7 +81,7 @@ VALUES (?, ?, ?)
 
 async fn try_get_by_body_hash(
     pool: &MySqlPool,
-    content: &String,
+    content: &str,
     body_hash: &Vec<u8>,
 ) -> Result<Option<ContentEntity>, EntityError> {
     let content_entity = sqlx::query_as!(
@@ -93,7 +109,7 @@ WHERE body_hash = ?
     Ok(content_entity)
 }
 
-fn hash_content(content: &String) -> Result<Vec<u8>, EntityError> {
+fn hash_content(content: &str) -> Result<Vec<u8>, EntityError> {
     if content.len() < MIN_CONTENT_LENGTH {
         return Err(EntityError::InvalidInput("content", "content is too short"));
     }

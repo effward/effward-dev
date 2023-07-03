@@ -26,7 +26,7 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-use crate::routes::{error, health, index, login, logout, post, posts, signup, submit, user};
+use crate::routes::{error, health, index, login, logout, post, posts, signup, submit, user, comment};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -129,26 +129,28 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Compress::default())
             .wrap(cors)
+            .wrap(
+                ErrorHandlers::new()
+                        .default_handler(error::generic::get::render_generic)
+                        .handler(
+                            StatusCode::NOT_FOUND,
+                            error::not_found::get::render_not_found,
+                        ),
+            )
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(
                 redis_store.clone(),
                 secret_key.clone(),
             ))
             .wrap(Logger::default())
-            .wrap(
-                ErrorHandlers::new()
-                    .default_handler(error::internal::get::render_internal)
-                    .handler(
-                        StatusCode::NOT_FOUND,
-                        error::not_found::get::render_not_found,
-                    ),
-            )
+
             .route("/", web::get().to(index::get::index))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))
             .route("/login", web::get().to(login::get::login))
             .route("/login", web::post().to(login::post::process_login))
             .route("/logout", web::post().to(logout::post::process_logout))
+            .route("/comment", web::post().to(comment::post::process_comment))
             .route("/submit", web::get().to(submit::get::submit))
             .route("/submit", web::post().to(submit::post::process_submission))
             .route("/user/{user}", web::get().to(user::get::user))
@@ -158,7 +160,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 scope("/error")
                     .route("/404", web::get().to(error::not_found::get::not_found))
-                    .route("/500", web::get().to(error::internal::get::internal)),
+                    .route("/generic", web::get().to(error::generic::get::generic)),
             )
             .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))

@@ -1,6 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
-use log::error;
 use secrecy::Secret;
 use serde::Deserialize;
 use sqlx::MySqlPool;

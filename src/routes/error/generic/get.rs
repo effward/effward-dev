@@ -1,16 +1,16 @@
 use actix_web::{
     dev::ServiceResponse, middleware::ErrorHandlerResponse, web, HttpResponse, Responder, Result,
 };
-use actix_web_flash_messages::IncomingFlashMessages;
+use actix_web_flash_messages::{IncomingFlashMessages, FlashMessage};
 use sqlx::MySqlPool;
 use tera::{Context, Tera};
 
-use crate::routes::user_context::{session_state::TypedSession, user_context};
+use crate::routes::{user_context::{session_state::TypedSession, user_context}, utils};
 
 const PAGE_NAME: &str = "error - internal";
 const HERO_BG_CLASS: &str = "hero-bg-500";
 
-pub async fn internal(
+pub async fn generic(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
@@ -29,14 +29,16 @@ pub async fn internal(
     build_response(&tera, user_context.context)
 }
 
-pub fn render_internal<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-    let request = res.into_parts().0;
-    let tera = request.app_data::<web::Data<Tera>>().unwrap();
+pub fn render_generic<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    let (request, response) = res.into_parts();
 
-    // Don't try to get authenticated user or other session state
-    let context = user_context::get_empty(PAGE_NAME, Some(HERO_BG_CLASS)).context;
+    // TODO: use session to get current user for navbar
 
-    let response = build_response(&tera, context);
+    let response = match response.error() {
+        Some(error) => utils::error_redirect("/error/generic", &format!("{}: {}", response.status(), error)),
+        None => utils::error_redirect("/error/generic", &format!("{}", response.status()))
+    };
+
     Ok(ErrorHandlerResponse::Response(
         ServiceResponse::new(request, response).map_into_right_body(),
     ))

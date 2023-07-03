@@ -1,0 +1,53 @@
+<div class="box is-barely-transparent is-hover my-1 px-2 py-2">
+  <article class="media">
+    <div class="media-content">
+        
+        <div class="content">
+          <a href="/user/{{ comment.author.id }}">
+              <span class="icon is-small ml-2">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+              </span>
+              <strong class="is-small">{{ comment.author.name }}</strong>
+          </a>
+         
+            <p class="subtitle is-6 mx-4 my-1">{{ comment.content }}</p>
+
+        </div>
+        
+        <nav class="level is-mobile">
+          <div class="level-left">
+            <button onclick="toggleById('reply-{{ comment.id }}')" class="level-item is-small pl-2" aria-label="reply">
+              <span class="icon is-small">
+                <i class="fas fa-reply pr-1" aria-hidden="true"></i>
+              </span>
+              reply
+            </button>
+          </div>
+        </nav>
+    </div>
+  </article>
+  <form id="reply-{{ comment.id }}" action="/comment" method="POST" style="display: none;">
+      <input type="hidden" name="post_id" value="{{ post.summary.id }}">
+      <input type="hidden" name="parent_id" value="{{ comment.id }}">
+      <div class="field">
+          <textarea
+              name="content"
+              class="textarea is-barely-transparent"
+              placeholder="your reply goes here"
+              rows="3"
+              onkeyup="if (this.scrollHeight > this.clientHeight) this.style.height = this.scrollHeight + 'px';"
+              style="overflow: auto; transition: height 0.2s ease-out;"></textarea>
+      </div>
+      <div class="field">
+          <div class="control">
+              <input type="submit" class="button is-success is-light" value="add reply">
+          </div>
+      </div>
+  </form>
+</div>
+<div class="section py-0 pl-4 pr-0">
+{% for comment in comment.children %}
+    {% set comment_depth = comment_depth + 1 %}
+    {% include "comment.html" %}
+{% endfor %}
+</div>
