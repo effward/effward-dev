@@ -1,5 +1,4 @@
-use actix_web::{web, HttpResponse, Responder};
-use actix_web_flash_messages::FlashMessage;
+use actix_web::{web, Responder};
 use log::error;
 use serde::Deserialize;
 use sqlx::MySqlPool;
@@ -7,7 +6,7 @@ use sqlx::MySqlPool;
 use crate::{
     entities::post,
     routes::{
-        user_context::{session_state::TypedSession, user_context::get_auth_user_entity},
+        user_context::{session_state::TypedSession, user_context},
         utils,
     },
 };
@@ -24,7 +23,7 @@ pub async fn process_submission(
     pool: web::Data<MySqlPool>,
     data: web::Form<SubmitRequest>,
 ) -> impl Responder {
-    match get_auth_user_entity(session, &pool).await {
+    match user_context::get_auth_user_entity(session, &pool).await {
         Ok(auth_user_entity) => match post::insert(
             &pool,
             &auth_user_entity.id,
@@ -36,18 +35,16 @@ pub async fn process_submission(
         {
             Ok(_post_id) => {
                 // TODO: Redirect to post page (after creating post page)
-                FlashMessage::success("new post successfully submitted").send();
-                utils::redirect("/posts")
+                utils::success_redirect("/posts", "new post successfully submitted")
             }
             Err(entity_error) => {
                 error!("Entity Error creating post: {:?}", entity_error);
 
                 // TODO: preserve form contents on redirect so that submission isn't lost
-                FlashMessage::warning(
+                utils::warning_redirect(
+                    "/submit",
                     "something went wrong submitting your post, please try again",
                 )
-                .send();
-                utils::redirect("/submit")
             }
         },
         Err(e) => {

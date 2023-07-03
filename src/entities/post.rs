@@ -13,7 +13,7 @@ pub const MAX_TITLE_LENGTH: usize = 400;
 pub struct PostEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
-    pub author: u64,
+    pub author_id: u64,
     pub title: String,
     pub link: Option<String>,
     pub content_id: Option<u64>,
@@ -23,7 +23,7 @@ pub struct PostEntity {
 
 pub async fn insert(
     pool: &MySqlPool,
-    author: &u64,
+    author_id: &u64,
     title: &String,
     link: &Option<String>,
     content: &Option<String>,
@@ -49,11 +49,11 @@ pub async fn insert(
 
     let post_id = sqlx::query!(
         r#"
-INSERT INTO posts (public_id, author, title, link, content_id, created, updated)
+INSERT INTO posts (public_id, author_id, title, link, content_id, created, updated)
 VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
         &public_id[..],
-        author,
+        author_id,
         sanitized_title,
         link,
         content_id,
@@ -113,12 +113,12 @@ pub async fn get_recent(
             sqlx::query_as!(
                 PostEntity,
                 r#"
-    SELECT *
-    FROM posts
-    WHERE id < ?
-    ORDER BY id DESC
-    LIMIT ?
-            "#,
+SELECT *
+FROM posts
+WHERE id < ?
+ORDER BY id DESC
+LIMIT ?
+                "#,
                 start_index,
                 count
             )
@@ -129,11 +129,11 @@ pub async fn get_recent(
             sqlx::query_as!(
                 PostEntity,
                 r#"
-    SELECT *
-    FROM posts
-    ORDER BY id DESC
-    LIMIT ?
-            "#,
+SELECT *
+FROM posts
+ORDER BY id DESC
+LIMIT ?
+                "#,
                 count
             )
             .fetch_all(pool)

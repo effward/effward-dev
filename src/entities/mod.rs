@@ -1,6 +1,7 @@
 mod error;
 mod utils;
 
+pub mod comment;
 pub mod content;
 pub mod email;
 pub mod post;

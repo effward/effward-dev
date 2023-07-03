@@ -11,6 +11,21 @@ pub fn redirect(location: &str) -> HttpResponse {
         .finish()
 }
 
+pub fn success_redirect(location: &str, success_message: &str) -> HttpResponse {
+    FlashMessage::success(success_message).send();
+    redirect(location)
+}
+
+pub fn info_redirect(location: &str, info_message: &str) -> HttpResponse {
+    FlashMessage::info(info_message).send();
+    redirect(location)
+}
+
+pub fn warning_redirect(location: &str, warning_message: &str) -> HttpResponse {
+    FlashMessage::warning(warning_message).send();
+    redirect(location)
+}
+
 pub fn error_redirect(location: &str, error_message: &str) -> HttpResponse {
     FlashMessage::error(error_message).send();
     redirect(location)
@@ -27,7 +42,7 @@ pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpRespo
         }
         _ => {
             error!("🔥 Entity Error: {:?}", error);
-            redirect("/error/500")
+            redirect("/error/generic")
         }
     }
 }

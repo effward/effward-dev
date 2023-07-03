@@ -2,6 +2,7 @@ mod models;
 mod user_context;
 mod utils;
 
+pub mod comment;
 pub mod error;
 pub mod health;
 pub mod index;

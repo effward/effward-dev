@@ -36,6 +36,14 @@
                     });
                 });
             });
+            function toggleById(id) {
+                var element = document.getElementById(id);
+                if (element.style.display === "none") {
+                    element.style.display = "block";
+                } else {
+                    element.style.display = "none";
+                }
+            }
         </script>
         <style>
         html {
@@ -148,6 +156,21 @@
             }
         }
 
+        .hero-bg-post {
+            background-color: #e0e0e0;
+            background-image: url('/static/img/hero_aurora.svg');
+            background-position: bottom -25px center;
+            background-repeat: no-repeat;
+            background-size: 102%;
+            background-attachment: fixed;
+        }
+        @media (min-width: 1416px) {
+            .hero-bg-post {
+                background-position: bottom -200px center;
+                background-size: 1400px auto;
+            }
+        }
+
         .hero-bg-posts {
             background-color: #e0e0e0;
             background-image: url('/static/img/hero_sunny-mountains.svg');
@@ -156,10 +179,10 @@
             background-size: 102%;
             background-attachment: fixed;
         }
-        @media (min-width: 1216px) {
+        @media (min-width: 1416px) {
             .hero-bg-posts {
                 background-position: bottom -175px center;
-                background-size: 1200px auto;
+                background-size: 1400px auto;
             }
         }
         @media (max-width: 768px) {
@@ -176,15 +199,15 @@
             background-size: 102%;
             background-attachment: fixed;
         }
-        @media (min-width: 1616px) {
+        @media (min-width: 1416px) {
             .hero-bg-submit {
-                background-position: bottom -200px center;
-                background-size: 1600px auto;
+                background-position: bottom -180px center;
+                background-size: 1400px auto;
             }
         }
 
         .hero.hero-bg-submit .title {
-            color: #fff
+            color: #f5f5f5
         }
 
         .is-barely-transparent {

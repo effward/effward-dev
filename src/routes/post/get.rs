@@ -13,6 +13,8 @@ use crate::{
     },
 };
 
+const HERO_BG_CLASS: &str = "hero-bg-post";
+
 pub async fn post(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
@@ -34,16 +36,14 @@ pub async fn post(
         }
     };
 
-    let post = models::translate_post_summary(&pool, &post_entity)
-        .await
-        .unwrap();
+    let post = models::translate_post(&pool, &post_entity).await.unwrap();
 
     let mut user_context = user_context::build(
         session,
         flash_messages,
         &pool,
-        &format!("post - {}", post.title),
-        None,
+        &format!("post - {}", post.summary.title),
+        Some(HERO_BG_CLASS),
     )
     .await;
 
