@@ -6,7 +6,6 @@ use sqlx::MySqlPool;
 use crate::{
     entities::post,
     routes::{
-<<<<<<< HEAD
         user_context::{session_state::TypedSession, user_context},
         utils,
     },
@@ -36,7 +35,6 @@ pub async fn process_submission(
         {
             Ok(_post_id) => {
                 // TODO: Redirect to post page (after creating post page)
-<<<<<<< HEAD
                 utils::success_redirect("/posts", "new post successfully submitted")
             },
             Err(entity_error) => {

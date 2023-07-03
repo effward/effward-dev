@@ -84,7 +84,6 @@ https://bulma.io/extensions/
 - hero_kayaking.svg (https://www.freepik.com/free-vector/kayaking-concept-illustration_26233242.htm)
 - hero_night-mountains.svg (https://www.freepik.com/free-vector/mountain-night-concept-illustration_33804220.htm)
 - hero_town.svg (https://www.freepik.com/free-vector/small-town-concept-illustration_12516925.htm)
-<<<<<<< HEAD
 - hero_city.svg (https://www.freepik.com/free-vector/future-city-concept-illustration_24487818.htm)
 - hero_tropical-island.svg (https://www.freepik.com/free-vector/tropical-island-concept-illustration_26233444.htm)
 - hero_bear-family2.svg (https://www.freepik.com/free-vector/bear-family-illustration_27828863.htm)

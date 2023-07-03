@@ -44,7 +44,6 @@ pub async fn post(
         session,
         flash_messages,
         &pool,
-<<<<<<< HEAD
         &format!("post - {}", post.summary.title),
         Some(HERO_BG_CLASS),
     )

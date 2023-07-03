@@ -11,7 +11,6 @@ pub fn redirect(location: &str) -> HttpResponse {
         .finish()
 }
 
-<<<<<<< HEAD
 pub fn success_redirect(location: &str, success_message: &str) -> HttpResponse {
     FlashMessage::success(success_message).send();
     redirect(location)
@@ -43,7 +42,6 @@ pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpRespo
         }
         _ => {
             error!("🔥 Entity Error: {:?}", error);
-<<<<<<< HEAD
             redirect("/error/generic")
         }
     }

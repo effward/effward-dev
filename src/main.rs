@@ -26,7 +26,6 @@ use std::env;
 use std::str;
 use tera::Tera;
 
-<<<<<<< HEAD
 use crate::routes::{error, health, index, login, logout, post, posts, signup, submit, user, comment};
 
 #[actix_web::main]
@@ -144,8 +143,14 @@ async fn main() -> std::io::Result<()> {
                 secret_key.clone(),
             ))
             .wrap(Logger::default())
-<<<<<<< HEAD
-
+            .wrap(
+                ErrorHandlers::new()
+                    .default_handler(error::internal::get::render_internal)
+                    .handler(
+                        StatusCode::NOT_FOUND,
+                        error::not_found::get::render_not_found,
+                    ),
+            )
             .route("/", web::get().to(index::get::index))
             .route("/signup", web::get().to(signup::get::signup))
             .route("/signup", web::post().to(signup::post::process_signup))
@@ -162,7 +167,6 @@ async fn main() -> std::io::Result<()> {
             .service(
                 scope("/error")
                     .route("/404", web::get().to(error::not_found::get::not_found))
-<<<<<<< HEAD
                     .route("/generic", web::get().to(error::generic::get::generic)),
             )
             .service(Files::new("/static", "public").show_files_listing())
