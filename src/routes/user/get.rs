@@ -1,10 +1,9 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::IncomingFlashMessages;
-use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::{
-    entities::user::UserStore,
+    entities::{user::UserStore, EntityError},
     routes::{
         models::UserModel,
         user_context::{session_state::TypedSession, user_context},
@@ -15,7 +14,6 @@ use crate::{
 pub async fn user(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
     user_store: web::Data<dyn UserStore>,
@@ -25,7 +23,17 @@ pub async fn user(
     let user = match user_store.get_by_public_id(&path_user).await {
         Ok(u) => u,
         Err(entity_error) => {
-            return utils::redirect_entity_error(entity_error, "user");
+            match entity_error {
+                EntityError::InvalidInput("public_id", _) => match user_store.get_by_name(&path_user).await {
+                    Ok(u) => u,
+                    Err(e) => {
+                        return utils::redirect_entity_error(e, "user");
+                    }
+                },
+                _ => {
+                    return utils::redirect_entity_error(entity_error, "user");
+                }
+            }
         }
     };
 
