@@ -7,7 +7,7 @@ use serde::Deserialize;
 use sqlx::MySqlPool;
 
 use crate::{
-    entities::{post, user::UserStore},
+    entities::{post, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context},
         utils,
@@ -25,9 +25,9 @@ pub async fn process_submission(
     session: TypedSession,
     pool: Data<MySqlPool>,
     data: Form<SubmitRequest>,
-    user_store: Data<dyn UserStore>,
+    stores: Data<EntityStores>,
 ) -> impl Responder {
-    match user_context::get_auth_user_entity(session, user_store).await {
+    match user_context::get_auth_user_entity(session, &stores).await {
         Ok(auth_user_entity) => match post::insert(
             &pool,
             &auth_user_entity.id,

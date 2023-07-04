@@ -6,9 +6,9 @@ use crate::entities::EntityError;
 use super::User;
 
 #[async_trait]
-pub trait UserStore: Send + Sync {
+pub trait UserStore: Send + Sync + Clone {
     async fn insert(
-        &mut self,
+        &self,
         name: &str,
         email: &str,
         password: &Secret<String>,

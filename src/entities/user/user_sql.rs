@@ -58,7 +58,7 @@ impl SqlUserStore {
 #[async_trait]
 impl UserStore for SqlUserStore {
     async fn insert(
-        &mut self,
+        &self,
         name: &str,
         email: &str,
         password: &Secret<String>,

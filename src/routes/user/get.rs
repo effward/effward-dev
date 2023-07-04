@@ -3,7 +3,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use tera::Tera;
 
 use crate::{
-    entities::{user::UserStore, EntityError},
+    entities::{user::UserStore, EntityError, EntityStores},
     routes::{
         models::UserModel,
         user_context::{session_state::TypedSession, user_context},
@@ -16,15 +16,15 @@ pub async fn user(
     flash_messages: IncomingFlashMessages,
     tera: web::Data<Tera>,
     path: web::Path<String>,
-    user_store: web::Data<dyn UserStore>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
     // TODO: handle errors
     let path_user = path.into_inner();
-    let user = match user_store.get_by_public_id(&path_user).await {
+    let user = match stores.user_store.get_by_public_id(&path_user).await {
         Ok(u) => u,
         Err(entity_error) => match entity_error {
             EntityError::InvalidInput("public_id", _) => {
-                match user_store.get_by_name(&path_user).await {
+                match stores.user_store.get_by_name(&path_user).await {
                     Ok(u) => u,
                     Err(e) => {
                         return utils::redirect_entity_error(e, "user");
@@ -42,7 +42,7 @@ pub async fn user(
     let mut user_context = user_context::build(
         session,
         flash_messages,
-        user_store,
+        &stores,
         &format!("user - {}", user_model.name),
         None,
     )

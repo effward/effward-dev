@@ -6,7 +6,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use tera::Tera;
 
 use crate::{
-    entities::user::UserStore,
+    entities::{user::UserStore, EntityStores},
     routes::user_context::{
         session_state::TypedSession,
         user_context::{self, UserContext},
@@ -20,14 +20,14 @@ const DEFAULT_MISSING_TYPE: &str = "item";
 pub async fn not_found(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    user_store: web::Data<dyn UserStore>,
+    stores: web::Data<EntityStores>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
     // TODO: handle errors
     let mut user_context = user_context::build(
         session,
         flash_messages,
-        user_store,
+        &stores,
         PAGE_NAME,
         Some(HERO_BG_CLASS),
     )

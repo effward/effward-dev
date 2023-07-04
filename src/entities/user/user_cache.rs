@@ -25,8 +25,7 @@ where
     }
 }
 
-async fn insert_source() -> Result<User, EntityError>
-{
+async fn insert_source() -> Result<User, EntityError> {
     ready(Err(EntityError::DuplicateKey)).await
 }
 
@@ -36,18 +35,23 @@ where
     T: UserStore + Send + Sync,
 {
     async fn insert(
-        &mut self,
+        &self,
         name: &str,
         email: &str,
         password: &Secret<String>,
     ) -> Result<User, EntityError> {
-        self.cache.insert_cached(insert_source,
-            |user: User| {
-                vec![format!("id:{}", user.id), format!("public_id:{}", user.public_id)]
-            },
-            None
-        ).await
-
+        self.cache
+            .insert_cached(
+                insert_source,
+                |user: User| {
+                    vec![
+                        format!("id:{}", user.id),
+                        format!("public_id:{}", user.public_id),
+                    ]
+                },
+                None,
+            )
+            .await
     }
 
     async fn get_by_name_password(

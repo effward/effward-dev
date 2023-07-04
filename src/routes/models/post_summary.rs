@@ -5,7 +5,9 @@ use sqlx::MySqlPool;
 use std::cmp;
 use substring::Substring;
 
-use crate::entities::{comment, content, post::PostEntity, user::UserStore, EntityError};
+use crate::entities::{
+    comment, content, post::PostEntity, user::UserStore, EntityError, EntityStores,
+};
 
 use super::{utils, UserModel};
 
@@ -27,9 +29,9 @@ pub struct PostSummary {
 pub async fn translate_post_summary(
     pool: &MySqlPool,
     post_entity: &PostEntity,
-    user_store: Data<dyn UserStore>,
+    stores: &EntityStores,
 ) -> Result<PostSummary, EntityError> {
-    let author_entity = user_store.get_by_id(post_entity.author_id).await?;
+    let author_entity = stores.user_store.get_by_id(post_entity.author_id).await?;
     let author = UserModel::from(author_entity);
 
     let mut post_preview: Option<String> = None;

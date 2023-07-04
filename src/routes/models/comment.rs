@@ -1,4 +1,3 @@
-use actix_web::web::Data;
 use async_recursion::async_recursion;
 use chrono::NaiveDateTime;
 use serde::Serialize;
@@ -8,7 +7,7 @@ use crate::entities::{
     comment::{self, CommentEntity},
     content,
     user::UserStore,
-    EntityError,
+    EntityError, EntityStores,
 };
 
 use super::{utils, UserModel};
@@ -29,11 +28,14 @@ pub struct Comment {
 #[async_recursion]
 pub async fn translate_comment(
     pool: &MySqlPool,
-    user_store: Data<dyn UserStore>,
+    stores: &EntityStores,
     comment_entity: &CommentEntity,
     depth: usize,
 ) -> Result<Comment, EntityError> {
-    let author_entity = user_store.get_by_id(comment_entity.author_id).await?;
+    let author_entity = stores
+        .user_store
+        .get_by_id(comment_entity.author_id)
+        .await?;
     let author = UserModel::from(author_entity);
 
     let children_entities = comment::get_by_post_id_parent_id(
@@ -48,8 +50,7 @@ pub async fn translate_comment(
 
     if depth < MAX_DEPTH {
         for child_entity in children_entities {
-            let child_comment =
-                translate_comment(pool, user_store.clone(), &child_entity, depth + 1).await?;
+            let child_comment = translate_comment(pool, stores, &child_entity, depth + 1).await?;
             children.push(child_comment);
         }
     }

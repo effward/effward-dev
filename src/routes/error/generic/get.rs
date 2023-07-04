@@ -5,7 +5,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use tera::{Context, Tera};
 
 use crate::{
-    entities::user::UserStore,
+    entities::{user::UserStore, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context},
         utils,
@@ -18,13 +18,13 @@ const HERO_BG_CLASS: &str = "hero-bg-500";
 pub async fn generic(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    user_store: web::Data<dyn UserStore>,
+    stores: web::Data<EntityStores>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
     let user_context = user_context::build(
         session,
         flash_messages,
-        user_store,
+        &stores,
         PAGE_NAME,
         Some(HERO_BG_CLASS),
     )

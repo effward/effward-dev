@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
@@ -9,10 +9,10 @@ use sqlx::MySqlPool;
 use crate::{
     entities::{
         user::{
-            UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
+            User, UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
             MIN_USERNAME_LENGTH,
         },
-        EntityError,
+        EntityError, EntityStores,
     },
     routes::{
         login::post::do_login_and_redirect, user_context::session_state::TypedSession, utils,
@@ -28,19 +28,18 @@ pub struct SignupRequest {
 
 pub async fn process_signup(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
     data: web::Form<SignupRequest>,
-    user_store: web::Data<Box<dyn UserStore>>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
-    let user_store = user_store.into_inner();
-    let result = user_store
+    let result = stores
+        .user_store
         .insert(&data.username, &data.email, &data.password)
         .await;
 
     match result {
         Ok(_) => {
             FlashMessage::success("successfully signed up").send();
-            do_login_and_redirect(session, user_store.as_ref(), &data.username, &data.password).await
+            do_login_and_redirect(session, &stores, &data.username, &data.password).await
         }
         Err(entity_error) => signup_error_redirect(entity_error),
     }

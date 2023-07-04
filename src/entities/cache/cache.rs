@@ -1,6 +1,6 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
-use dashmap::{DashMap, mapref::one::Ref};
+use dashmap::{mapref::one::Ref, DashMap};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
@@ -24,7 +24,7 @@ impl Cache {
         }
     }
 
-    fn insert<T>(&mut self, key: String, value: T, expiry: Option<Duration>) -> Option<T>
+    fn insert<T>(&self, key: String, value: T, expiry: Option<Duration>) -> Option<T>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
     {
@@ -45,7 +45,7 @@ impl Cache {
         decode_and_unwrap_ref(encoded)
     }
 
-    fn remove<T>(&mut self, key: String) -> Option<T>
+    fn remove<T>(&self, key: String) -> Option<T>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
     {
@@ -55,7 +55,7 @@ impl Cache {
     }
 
     pub async fn get_cached<T, Fut>(
-        &mut self,
+        &self,
         key: String,
         expiry: Option<Duration>,
         get_source: fn() -> Fut,
@@ -75,7 +75,7 @@ impl Cache {
     }
 
     pub async fn insert_cached<T, Fut>(
-        &mut self,
+        &self,
         insert_source: fn() -> Fut,
         keys_builder: fn(T) -> Vec<String>,
         expiry: Option<Duration>,
@@ -94,13 +94,13 @@ impl Cache {
     }
 }
 
-trait CachableTraitGuard
-{
+trait CachableTraitGuard {
     type Mirror: for<'a> Deserialize<'a> + Serialize + PartialEq + Clone;
 }
 
 impl<T> CachableTraitGuard for T
-    where for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone
+where
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
 {
     type Mirror = Self;
 }
@@ -108,14 +108,16 @@ impl<T> CachableTraitGuard for T
 type CacheableValue<T> = <T as CachableTraitGuard>::Mirror;
 
 trait InsertSourceResultTraitGuard<Id>
-    where Id: Clone
+where
+    Id: Clone,
 {
     type Mirror: Future<Output = Result<Id, EntityError>> + 'static;
 }
 
 impl<T, Id> InsertSourceResultTraitGuard<Id> for T
-    where T: Future<Output = Result<Id, EntityError>> + 'static,
-    Id: Clone
+where
+    T: Future<Output = Result<Id, EntityError>> + 'static,
+    Id: Clone,
 {
     type Mirror = Self;
 }

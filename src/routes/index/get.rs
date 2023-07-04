@@ -5,6 +5,7 @@ use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::entities::user::UserStore;
+use crate::entities::EntityStores;
 use crate::routes::user_context::{session_state::TypedSession, user_context};
 use crate::{
     entities::{self, post::PostEntity},
@@ -18,11 +19,11 @@ pub async fn index(
     flash_messages: IncomingFlashMessages,
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
-    user_store: web::Data<dyn UserStore>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
     debug!("getting user context");
     let mut user_context =
-        user_context::build(session, flash_messages, user_store.clone(), "home", None).await;
+        user_context::build(session, flash_messages, &stores, "home", None).await;
 
     debug!("getting recent posts");
     let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
@@ -38,7 +39,7 @@ pub async fn index(
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(&pool, post_entity, user_store.clone()).await {
+        match models::translate_post_summary(&pool, post_entity, &stores).await {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }

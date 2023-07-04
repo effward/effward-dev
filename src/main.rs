@@ -14,7 +14,7 @@ use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
 use actix_web::http::StatusCode;
 use actix_web::middleware::{Compress, ErrorHandlers, Logger};
-use actix_web::web::{scope, Data};
+use actix_web::web::{scope, Data, ServiceConfig};
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::{FlashMessagesFramework, Level};
@@ -22,6 +22,7 @@ use dotenv::dotenv;
 use env_logger;
 use log::{error, warn};
 use sqlx::mysql::MySqlPoolOptions;
+use sqlx::MySqlPool;
 use std::env;
 use std::str;
 use std::sync::Arc;
@@ -64,11 +65,7 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let cache = entities::cache::Cache::new();
-    let sql_user_store = entities::user::SqlUserStore::new(pool.clone());
-    let cached_user_store = entities::user::CachedUserStore::new(cache, sql_user_store);
-    let user_store_arc: Box<dyn UserStore> = Box::new(cached_user_store);
-    let user_store: Data<Box<dyn UserStore>> = Data::new(user_store_arc);
+    let entity_stores = entities::EntityStores::new(pool.clone());
 
     warn!("🌎 Initializing Tera static templates...");
     let tera = match Tera::new("templates/**/*") {
@@ -174,7 +171,7 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))
-            .app_data(user_store.clone())
+            .app_data(web::Data::new(entity_stores.clone()))
     })
     .bind(("0.0.0.0", 8080))?
     .run()

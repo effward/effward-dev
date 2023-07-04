@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
@@ -7,7 +7,7 @@ use secrecy::Secret;
 use serde::Deserialize;
 
 use crate::{
-    entities::{user::UserStore, EntityError},
+    entities::{user::UserStore, EntityError, EntityStores},
     routes::{models::UserModel, user_context::session_state::TypedSession, utils},
 };
 
@@ -20,18 +20,21 @@ pub struct LoginRequest {
 pub async fn process_login(
     session: TypedSession,
     data: web::Form<LoginRequest>,
-    user_store: web::Data<Box<dyn UserStore>>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
-    do_login_and_redirect(session, user_store.into_inner().as_ref(), &data.username, &data.password).await
+    do_login_and_redirect(session, &stores, &data.username, &data.password).await
 }
 
 pub async fn do_login_and_redirect(
     session: TypedSession,
-    user_store: &Box<dyn UserStore>,
+    stores: &EntityStores,
     username: &String,
     password: &Secret<String>,
 ) -> HttpResponse {
-    let result = user_store.get_by_name_password(username, password).await;
+    let result = stores
+        .user_store
+        .get_by_name_password(username, password)
+        .await;
 
     match result {
         Ok(user) => {

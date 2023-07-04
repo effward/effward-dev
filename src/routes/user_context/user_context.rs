@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 
 use crate::{
-    entities::user::{User, UserStore},
+    entities::{
+        user::{User, UserStore},
+        EntityStores,
+    },
     routes::models::UserModel,
 };
 
@@ -52,7 +55,7 @@ pub fn get_empty(page_name: &str, image_path: Option<&str>) -> UserContext {
 pub async fn build(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    user_store: Data<dyn UserStore>,
+    stores: &EntityStores,
     page_name: &str,
     image_path: Option<&str>,
 ) -> UserContext {
@@ -60,7 +63,7 @@ pub async fn build(
 
     insert_title(&mut context, page_name);
     let flash_messages = insert_notifications(&mut context, flash_messages);
-    let auth_user = insert_auth_user(&mut context, session, user_store).await;
+    let auth_user = insert_auth_user(&mut context, session, stores).await;
     insert_hero_bg_class(&mut context, image_path);
 
     UserContext {
@@ -72,11 +75,11 @@ pub async fn build(
 
 pub async fn get_auth_user_entity(
     session: TypedSession,
-    user_store: Data<dyn UserStore>,
+    stores: &EntityStores,
 ) -> Result<User, UserContextError> {
     match session.get_user_id()? {
         None => Err(UserContextError::NotAuthenticated),
-        Some(user_id) => Ok(user_store.get_by_public_id(&user_id).await?),
+        Some(user_id) => Ok(stores.user_store.get_by_public_id(&user_id).await?),
     }
 }
 
@@ -120,9 +123,9 @@ fn insert_notifications(
 async fn insert_auth_user(
     context: &mut Context,
     session: TypedSession,
-    user_store: Data<dyn UserStore>,
+    stores: &EntityStores,
 ) -> Option<UserModel> {
-    match get_auth_user_entity(session, user_store).await {
+    match get_auth_user_entity(session, stores).await {
         Ok(auth_user_entity) => {
             let auth_user = UserModel::from(auth_user_entity);
             context.insert("auth_user", &auth_user);

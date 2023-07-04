@@ -5,7 +5,7 @@ use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::{
-    entities::{post, user::UserStore},
+    entities::{post, user::UserStore, EntityStores},
     routes::{
         models,
         user_context::{session_state::TypedSession, user_context},
@@ -21,7 +21,7 @@ pub async fn post(
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
-    user_store: web::Data<dyn UserStore>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
     // TODO: handle errors
     let path_post = path.into_inner();
@@ -37,14 +37,14 @@ pub async fn post(
         }
     };
 
-    let post = models::translate_post(&pool, &post_entity, user_store.clone())
+    let post = models::translate_post(&pool, &post_entity, &stores)
         .await
         .unwrap();
 
     let mut user_context = user_context::build(
         session,
         flash_messages,
-        user_store.clone(),
+        &stores,
         &format!("post - {}", post.summary.title),
         Some(HERO_BG_CLASS),
     )

@@ -3,7 +3,7 @@ use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
 use tera::Tera;
 
 use crate::{
-    entities::user::UserStore,
+    entities::{user::UserStore, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context},
         utils,
@@ -15,13 +15,13 @@ const HERO_BG_CLASS: &str = "hero-bg-submit";
 pub async fn submit(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    user_store: Data<dyn UserStore>,
+    stores: Data<EntityStores>,
     tera: Data<Tera>,
 ) -> impl Responder {
     let user_context = user_context::build(
         session,
         flash_messages,
-        user_store,
+        &stores,
         "submit",
         Some(HERO_BG_CLASS),
     )
