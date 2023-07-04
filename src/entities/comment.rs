@@ -1,4 +1,4 @@
-use cached::proc_macro::cached;
+use cached::{Cached, proc_macro::cached, TimedSizedCache};
 use chrono::{NaiveDateTime, Utc};
 use sqlx::MySqlPool;
 use uuid::Uuid;
@@ -98,14 +98,21 @@ WHERE post_id = ?
     Ok(count.count)
 }
 
-#[cached(name = "COMMENT_BY_POST_ID_PARENT_ID", key = "String", convert = r#"{ format!("{}::{:?}::{:?}::{}", post_id, parent_id, start_index, count) }"#, size = 100, time = 300, result = true)]
+// #[cached(name = "COMMENT_POST_ID_PARENT_ID", key = "String", convert = r#"{ format!("{}::{:?}::{:?}::{}", post_id, parent_id, start_index, count) }"#, size = 100, time = 300, result = true)]
 pub async fn get_by_post_id_parent_id(
     pool: &MySqlPool,
+    cache: &mut TimedSizedCache<String, Vec<CommentEntity>>,
     post_id: &u64,
     parent_id: Option<u64>,
     start_index: Option<u64>,
     count: u8,
 ) -> Result<Vec<CommentEntity>, EntityError> {
+    let key = format!("{}::{:?}::{:?}::{}", post_id, parent_id, start_index, count);
+
+    if let Some(cached_value) = cache.cache_get(&key) {
+        return Ok(cached_value.clone());
+    }
+
     let comment_entities = match parent_id {
         Some(parent_id) => match start_index {
             Some(start_index) => {
@@ -194,6 +201,6 @@ LIMIT ?
             }
         },
     };
-
+    cache.cache_set(key, comment_entities.clone());
     Ok(comment_entities)
 }

@@ -21,6 +21,7 @@ pub async fn post(
     pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
+    
 ) -> impl Responder {
     // TODO: handle errors
     let path_post = path.into_inner();

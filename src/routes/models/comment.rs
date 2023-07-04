@@ -1,4 +1,5 @@
 use async_recursion::async_recursion;
+use cached::TimedSizedCache;
 use chrono::NaiveDateTime;
 use serde::Serialize;
 use sqlx::MySqlPool;
@@ -26,6 +27,7 @@ pub struct Comment {
 #[async_recursion]
 pub async fn translate_comment(
     pool: &MySqlPool,
+    cache: &mut TimedSizedCache<String, Vec<CommentEntity>>,
     comment_entity: &CommentEntity,
     depth: usize,
 ) -> Result<Comment, EntityError> {
@@ -34,6 +36,7 @@ pub async fn translate_comment(
 
     let children_entities = comment::get_by_post_id_parent_id(
         pool,
+        cache,
         &comment_entity.post_id,
         Some(comment_entity.id),
         None,
@@ -44,7 +47,7 @@ pub async fn translate_comment(
 
     if depth < MAX_DEPTH {
         for child_entity in children_entities {
-            let child_comment = translate_comment(pool, &child_entity, depth + 1).await?;
+            let child_comment = translate_comment(pool, cache, &child_entity, depth + 1).await?;
             children.push(child_comment);
         }
     }
