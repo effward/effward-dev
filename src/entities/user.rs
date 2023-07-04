@@ -1,5 +1,6 @@
 use std::str;
 
+use cached::proc_macro::cached;
 use chrono::{NaiveDateTime, Utc};
 use hex::ToHex;
 use pbkdf2::pbkdf2_hmac_array;
@@ -15,7 +16,7 @@ pub const MAX_USERNAME_LENGTH: usize = 32;
 pub const MIN_PASSWORD_LENGTH: usize = 8;
 pub const MAX_PASSWORD_LENGTH: usize = 256;
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Clone, Debug, sqlx::FromRow)]
 pub struct UserEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
@@ -114,6 +115,7 @@ WHERE name = ?
     Ok(user_entity)
 }
 
+#[cached(name = "USER_BY_ID", key = "String", convert = r#"{ format!("{}", id) }"#, size = 100, time = 300, result = true)]
 pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<UserEntity, EntityError> {
     let user_entity = sqlx::query_as!(
         UserEntity,

@@ -1,3 +1,4 @@
+use cached::proc_macro::cached;
 use chrono::{NaiveDateTime, Utc};
 use sqlx::MySqlPool;
 use uuid::Uuid;
@@ -97,6 +98,7 @@ WHERE post_id = ?
     Ok(count.count)
 }
 
+#[cached(name = "COMMENT_BY_POST_ID_PARENT_ID", key = "String", convert = r#"{ format!("{}::{:?}::{:?}::{}", post_id, parent_id, start_index, count) }"#, size = 100, time = 300, result = true)]
 pub async fn get_by_post_id_parent_id(
     pool: &MySqlPool,
     post_id: &u64,

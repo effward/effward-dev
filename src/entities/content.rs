@@ -1,3 +1,4 @@
+use cached::proc_macro::cached;
 use chrono::{NaiveDateTime, Utc};
 use log::error;
 use sha2::{Digest, Sha256};
@@ -33,6 +34,7 @@ pub async fn insert(pool: &MySqlPool, content: &str) -> Result<u64, EntityError>
     insert_by_body_hash(pool, content, &body_hash).await
 }
 
+#[cached(name = "CONTENT_BY_ID", key = "String", convert = r#"{ format!("{}", id) }"#, size = 100, time = 300, result = true)]
 pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<ContentEntity, EntityError> {
     let content_entity = sqlx::query_as!(
         ContentEntity,
