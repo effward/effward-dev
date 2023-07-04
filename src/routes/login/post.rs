@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use log::{error, info};
@@ -18,14 +20,14 @@ pub struct LoginRequest {
 pub async fn process_login(
     session: TypedSession,
     data: web::Form<LoginRequest>,
-    user_store: web::Data<dyn UserStore>,
+    user_store: web::Data<Box<dyn UserStore>>,
 ) -> impl Responder {
-    do_login_and_redirect(session, user_store, &data.username, &data.password).await
+    do_login_and_redirect(session, user_store.into_inner().as_ref(), &data.username, &data.password).await
 }
 
 pub async fn do_login_and_redirect(
     session: TypedSession,
-    user_store: web::Data<dyn UserStore>,
+    user_store: &Box<dyn UserStore>,
     username: &String,
     password: &Secret<String>,
 ) -> HttpResponse {

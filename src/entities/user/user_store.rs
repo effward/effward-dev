@@ -8,11 +8,11 @@ use super::User;
 #[async_trait]
 pub trait UserStore: Send + Sync {
     async fn insert(
-        &self,
+        &mut self,
         name: &str,
         email: &str,
         password: &Secret<String>,
-    ) -> Result<u64, EntityError>;
+    ) -> Result<User, EntityError>;
 
     async fn get_by_name_password(
         &self,

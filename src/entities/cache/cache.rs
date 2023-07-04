@@ -1,13 +1,14 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
+use dashmap::{DashMap, mapref::one::Ref};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, future::Future};
+use std::future::Future;
 
 use crate::entities::EntityError;
 
 #[derive(Clone, Debug)]
 pub struct Cache {
-    map: HashMap<String, Vec<u8>>,
+    map: DashMap<String, Vec<u8>>,
 }
 
 #[derive(Deserialize, Serialize, PartialEq)]
@@ -19,7 +20,7 @@ struct CacheValue<T> {
 impl Cache {
     pub fn new() -> Self {
         Self {
-            map: HashMap::new(),
+            map: DashMap::new(),
         }
     }
 
@@ -31,7 +32,7 @@ impl Cache {
         let encoded = wrap_and_encode(value, expiry);
         let existing = self.map.insert(key, encoded);
 
-        decode_and_unwrap(existing)
+        decode_and_unwrap_value(existing)
     }
 
     fn get<T>(&self, key: String) -> Option<T>
@@ -73,24 +74,57 @@ impl Cache {
         }
     }
 
-    pub async fn insert_cached<T, Id, Fut>(
+    pub async fn insert_cached<T, Fut>(
         &mut self,
-        key: String,
-        value: T,
+        insert_source: fn() -> Fut,
+        keys_builder: fn(T) -> Vec<String>,
         expiry: Option<Duration>,
-        write_source: fn() -> Fut,
-    ) -> Result<Id, EntityError>
+    ) -> Result<T, EntityError>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
-        Fut: Future<Output = Result<Id, EntityError>> + 'static,
+        Fut: Future<Output = Result<T, EntityError>> + Sized,
     {
-        let source_id = write_source().await?;
+        let source_value = insert_source().await?;
+        let keys = keys_builder(source_value.clone());
+        for key in keys {
+            self.insert(key, source_value.clone(), expiry);
+        }
 
-        self.insert(key, value, expiry);
-
-        Ok(source_id)
+        Ok(source_value)
     }
 }
+
+trait CachableTraitGuard
+{
+    type Mirror: for<'a> Deserialize<'a> + Serialize + PartialEq + Clone;
+}
+
+impl<T> CachableTraitGuard for T
+    where for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone
+{
+    type Mirror = Self;
+}
+
+type CacheableValue<T> = <T as CachableTraitGuard>::Mirror;
+
+trait InsertSourceResultTraitGuard<Id>
+    where Id: Clone
+{
+    type Mirror: Future<Output = Result<Id, EntityError>> + 'static;
+}
+
+impl<T, Id> InsertSourceResultTraitGuard<Id> for T
+    where T: Future<Output = Result<Id, EntityError>> + 'static,
+    Id: Clone
+{
+    type Mirror = Self;
+}
+
+type InsertSourceResult<T, Id> = <T as InsertSourceResultTraitGuard<Id>>::Mirror;
+
+type InsertSource<T, Id> = fn() -> InsertSourceResult<T, Id>;
+
+// type InsertSource<Id> = fn() -> Future<Output = Result<Id, EntityError>>;
 
 fn wrap_and_encode<T>(value: T, expiry: Option<Duration>) -> Vec<u8>
 where
@@ -108,7 +142,7 @@ where
     bincode::serialize(&wrapped_value).unwrap()
 }
 
-fn decode_and_unwrap<T>(encoded: Option<Vec<u8>>) -> Option<T>
+fn decode_and_unwrap_value<T>(encoded: Option<Vec<u8>>) -> Option<T>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
 {
@@ -118,12 +152,22 @@ where
     }
 }
 
-fn decode_and_unwrap_ref<T>(encoded: Option<&Vec<u8>>) -> Option<T>
+fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Option<T>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
 {
     match encoded {
-        Some(encoded) => do_decode_and_unwrap(encoded),
+        Some((_, encoded)) => do_decode_and_unwrap(&encoded),
+        None => None,
+    }
+}
+
+fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Option<T>
+where
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+{
+    match encoded {
+        Some(encoded) => do_decode_and_unwrap(encoded.value()),
         None => None,
     }
 }

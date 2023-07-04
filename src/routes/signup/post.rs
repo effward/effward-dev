@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use secrecy::Secret;
@@ -28,8 +30,9 @@ pub async fn process_signup(
     session: TypedSession,
     pool: web::Data<MySqlPool>,
     data: web::Form<SignupRequest>,
-    user_store: web::Data<dyn UserStore>,
+    user_store: web::Data<Box<dyn UserStore>>,
 ) -> impl Responder {
+    let user_store = user_store.into_inner();
     let result = user_store
         .insert(&data.username, &data.email, &data.password)
         .await;
@@ -37,7 +40,7 @@ pub async fn process_signup(
     match result {
         Ok(_) => {
             FlashMessage::success("successfully signed up").send();
-            do_login_and_redirect(session, user_store, &data.username, &data.password).await
+            do_login_and_redirect(session, user_store.as_ref(), &data.username, &data.password).await
         }
         Err(entity_error) => signup_error_redirect(entity_error),
     }

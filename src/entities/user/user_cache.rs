@@ -1,3 +1,5 @@
+use std::future::ready;
+
 use async_trait::async_trait;
 use secrecy::Secret;
 
@@ -10,6 +12,7 @@ pub struct CachedUserStore<T>
 where
     T: UserStore,
 {
+    cache: Cache,
     source: T,
 }
 
@@ -18,8 +21,13 @@ where
     T: UserStore,
 {
     pub fn new(cache: Cache, source: T) -> Self {
-        Self { source }
+        Self { cache, source }
     }
+}
+
+async fn insert_source() -> Result<User, EntityError>
+{
+    ready(Err(EntityError::DuplicateKey)).await
 }
 
 #[async_trait]
@@ -28,12 +36,18 @@ where
     T: UserStore + Send + Sync,
 {
     async fn insert(
-        &self,
+        &mut self,
         name: &str,
         email: &str,
         password: &Secret<String>,
-    ) -> Result<u64, EntityError> {
-        self.source.insert(name, email, password).await
+    ) -> Result<User, EntityError> {
+        self.cache.insert_cached(insert_source,
+            |user: User| {
+                vec![format!("id:{}", user.id), format!("public_id:{}", user.public_id)]
+            },
+            None
+        ).await
+
     }
 
     async fn get_by_name_password(

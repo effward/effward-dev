@@ -58,12 +58,14 @@ impl SqlUserStore {
 #[async_trait]
 impl UserStore for SqlUserStore {
     async fn insert(
-        &self,
+        &mut self,
         name: &str,
         email: &str,
         password: &Secret<String>,
-    ) -> Result<u64, EntityError> {
-        Ok(insert(&self.pool, name, email, password).await?)
+    ) -> Result<User, EntityError> {
+        let user_id = insert(&self.pool, name, email, password).await?;
+
+        Ok(self.get_by_id(user_id).await?)
     }
 
     async fn get_by_name_password(

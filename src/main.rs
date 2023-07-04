@@ -67,8 +67,8 @@ async fn main() -> std::io::Result<()> {
     let cache = entities::cache::Cache::new();
     let sql_user_store = entities::user::SqlUserStore::new(pool.clone());
     let cached_user_store = entities::user::CachedUserStore::new(cache, sql_user_store);
-    let user_store_arc: Arc<dyn UserStore> = Arc::new(cached_user_store);
-    let user_store: Data<dyn UserStore> = Data::from(user_store_arc);
+    let user_store_arc: Box<dyn UserStore> = Box::new(cached_user_store);
+    let user_store: Data<Box<dyn UserStore>> = Data::new(user_store_arc);
 
     warn!("🌎 Initializing Tera static templates...");
     let tera = match Tera::new("templates/**/*") {
