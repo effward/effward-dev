@@ -3,35 +3,36 @@ use secrecy::Secret;
 
 use crate::entities::{cache::Cache, EntityError};
 
-use super::{UserStore, User};
+use super::{User, UserStore};
 
 #[derive(Clone)]
 pub struct CachedUserStore<T>
-    where T: UserStore
+where
+    T: UserStore,
 {
     source: T,
 }
 
 impl<T> CachedUserStore<T>
-    where T: UserStore
+where
+    T: UserStore,
 {
     pub fn new(cache: Cache, source: T) -> Self {
-        Self {
-            source,
-        }
+        Self { source }
     }
 }
 
 #[async_trait]
 impl<T> UserStore for CachedUserStore<T>
-    where T: UserStore + Send + Sync
+where
+    T: UserStore + Send + Sync,
 {
     async fn insert(
         &self,
         name: &str,
         email: &str,
         password: &Secret<String>,
-        ) -> Result<u64, EntityError> {
+    ) -> Result<u64, EntityError> {
         self.source.insert(name, email, password).await
     }
 
@@ -39,7 +40,7 @@ impl<T> UserStore for CachedUserStore<T>
         &self,
         name: &str,
         password: &Secret<String>,
-        ) -> Result<User, EntityError> {
+    ) -> Result<User, EntityError> {
         self.source.get_by_name_password(name, password).await
     }
 

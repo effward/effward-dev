@@ -4,10 +4,13 @@ use actix_web::{
 use actix_web_flash_messages::IncomingFlashMessages;
 use tera::{Context, Tera};
 
-use crate::{routes::{
-    user_context::{session_state::TypedSession, user_context},
-    utils,
-}, entities::user::UserStore};
+use crate::{
+    entities::user::UserStore,
+    routes::{
+        user_context::{session_state::TypedSession, user_context},
+        utils,
+    },
+};
 
 const PAGE_NAME: &str = "error - internal";
 const HERO_BG_CLASS: &str = "hero-bg-500";

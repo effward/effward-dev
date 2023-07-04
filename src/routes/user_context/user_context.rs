@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 
 use crate::{
-    routes::models::UserModel, entities::user::{UserStore, User},
+    entities::user::{User, UserStore},
+    routes::models::UserModel,
 };
 
 use super::{session_state::TypedSession, UserContextError};
@@ -72,12 +73,10 @@ pub async fn build(
 pub async fn get_auth_user_entity(
     session: TypedSession,
     user_store: Data<dyn UserStore>,
-    ) -> Result<User, UserContextError> {
+) -> Result<User, UserContextError> {
     match session.get_user_id()? {
         None => Err(UserContextError::NotAuthenticated),
-        Some(user_id) => {
-            Ok(user_store.get_by_public_id(&user_id).await?)
-        }
+        Some(user_id) => Ok(user_store.get_by_public_id(&user_id).await?),
     }
 }
 
@@ -122,7 +121,7 @@ async fn insert_auth_user(
     context: &mut Context,
     session: TypedSession,
     user_store: Data<dyn UserStore>,
-    ) -> Option<UserModel> {
+) -> Option<UserModel> {
     match get_auth_user_entity(session, user_store).await {
         Ok(auth_user_entity) => {
             let auth_user = UserModel::from(auth_user_entity);

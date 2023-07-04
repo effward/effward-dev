@@ -18,9 +18,11 @@ struct CacheValue<T> {
 
 impl Cache {
     pub fn new() -> Self {
-        Self { map: HashMap::new() }
+        Self {
+            map: HashMap::new(),
+        }
     }
-    
+
     fn insert<T>(&mut self, key: String, value: T, expiry: Option<Duration>) -> Option<T>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,

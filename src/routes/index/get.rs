@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
-use log::{error, debug};
+use log::{debug, error};
 use sqlx::MySqlPool;
 use tera::Tera;
 
@@ -21,7 +21,8 @@ pub async fn index(
     user_store: web::Data<dyn UserStore>,
 ) -> impl Responder {
     debug!("getting user context");
-    let mut user_context = user_context::build(session, flash_messages, user_store.clone(), "home", None).await;
+    let mut user_context =
+        user_context::build(session, flash_messages, user_store.clone(), "home", None).await;
 
     debug!("getting recent posts");
     let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;

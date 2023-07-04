@@ -6,7 +6,9 @@ use sqlx::MySqlPool;
 
 use crate::entities::{
     comment::{self, CommentEntity},
-    content, user::UserStore, EntityError,
+    content,
+    user::UserStore,
+    EntityError,
 };
 
 use super::{utils, UserModel};
@@ -46,7 +48,8 @@ pub async fn translate_comment(
 
     if depth < MAX_DEPTH {
         for child_entity in children_entities {
-            let child_comment = translate_comment(pool, user_store.clone(), &child_entity, depth + 1).await?;
+            let child_comment =
+                translate_comment(pool, user_store.clone(), &child_entity, depth + 1).await?;
             children.push(child_comment);
         }
     }

@@ -1,7 +1,7 @@
 use std::str;
 
 use async_trait::async_trait;
-use chrono::{NaiveDateTime, Utc, TimeZone};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use hex::ToHex;
 use pbkdf2::pbkdf2_hmac_array;
 use secrecy::{ExposeSecret, Secret};
@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use crate::entities::{email, utils, EntityError};
 
-use super::{UserStore, User};
+use super::{User, UserStore};
 
 pub const MIN_USERNAME_LENGTH: usize = 4;
 pub const MAX_USERNAME_LENGTH: usize = 32;
@@ -62,7 +62,7 @@ impl UserStore for SqlUserStore {
         name: &str,
         email: &str,
         password: &Secret<String>,
-        ) -> Result<u64, EntityError> {
+    ) -> Result<u64, EntityError> {
         Ok(insert(&self.pool, name, email, password).await?)
     }
 
@@ -70,8 +70,10 @@ impl UserStore for SqlUserStore {
         &self,
         name: &str,
         password: &Secret<String>,
-        ) -> Result<User, EntityError> {
-        Ok(User::from(get_by_name_password(&self.pool, name, password).await?))
+    ) -> Result<User, EntityError> {
+        Ok(User::from(
+            get_by_name_password(&self.pool, name, password).await?,
+        ))
     }
 
     async fn get_by_name(&self, name: &str) -> Result<User, EntityError> {
@@ -84,7 +86,7 @@ impl UserStore for SqlUserStore {
 
     async fn get_by_public_id(&self, public_id: &str) -> Result<User, EntityError> {
         let public_id = utils::parse_public_id(public_id)?;
-        
+
         Ok(User::from(get_by_public_id(&self.pool, public_id).await?))
     }
 }

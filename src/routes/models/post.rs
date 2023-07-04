@@ -2,7 +2,7 @@ use actix_web::web::Data;
 use serde::Serialize;
 use sqlx::MySqlPool;
 
-use crate::entities::{comment, post::PostEntity, EntityError, user::UserStore};
+use crate::entities::{comment, post::PostEntity, user::UserStore, EntityError};
 
 use super::{
     comment::{translate_comment, MAX_CHILD_COMMENTS},

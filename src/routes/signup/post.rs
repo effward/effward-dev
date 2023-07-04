@@ -7,8 +7,8 @@ use sqlx::MySqlPool;
 use crate::{
     entities::{
         user::{
-            MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
-            MIN_USERNAME_LENGTH, UserStore,
+            UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
+            MIN_USERNAME_LENGTH,
         },
         EntityError,
     },
@@ -30,7 +30,9 @@ pub async fn process_signup(
     data: web::Form<SignupRequest>,
     user_store: web::Data<dyn UserStore>,
 ) -> impl Responder {
-    let result = user_store.insert(&data.username, &data.email, &data.password).await;
+    let result = user_store
+        .insert(&data.username, &data.email, &data.password)
+        .await;
 
     match result {
         Ok(_) => {

@@ -40,6 +40,6 @@ pub fn get_readable_public_id(uuid_vec: Vec<u8>) -> String {
 pub fn parse_public_id(public_id: &str) -> Result<Uuid, EntityError> {
     match ShortGuid::try_parse(public_id) {
         Ok(id) => Ok(*id.as_uuid()),
-        Err(_) => Err(EntityError::InvalidInput("public_id", "invalid uuid"))
+        Err(_) => Err(EntityError::InvalidInput("public_id", "invalid uuid")),
     }
 }

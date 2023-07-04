@@ -22,8 +22,14 @@ pub async fn posts(
     tera: web::Data<Tera>,
     user_store: web::Data<dyn UserStore>,
 ) -> impl Responder {
-    let mut user_context =
-        user_context::build(session, flash_messages, user_store.clone(), "posts", Some(HERO_BG_CLASS)).await;
+    let mut user_context = user_context::build(
+        session,
+        flash_messages,
+        user_store.clone(),
+        "posts",
+        Some(HERO_BG_CLASS),
+    )
+    .await;
 
     let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
 

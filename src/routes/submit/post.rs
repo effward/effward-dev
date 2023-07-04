@@ -1,4 +1,7 @@
-use actix_web::{web::{Data, Form}, Responder};
+use actix_web::{
+    web::{Data, Form},
+    Responder,
+};
 use log::error;
 use serde::Deserialize;
 use sqlx::MySqlPool;

@@ -19,7 +19,7 @@ pub async fn process_login(
     session: TypedSession,
     data: web::Form<LoginRequest>,
     user_store: web::Data<dyn UserStore>,
-    ) -> impl Responder {
+) -> impl Responder {
     do_login_and_redirect(session, user_store, &data.username, &data.password).await
 }
 

@@ -2,10 +2,13 @@ use actix_web::{web::Data, HttpResponse, Responder};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
 use tera::Tera;
 
-use crate::{routes::{
-    user_context::{session_state::TypedSession, user_context},
-    utils,
-}, entities::user::UserStore};
+use crate::{
+    entities::user::UserStore,
+    routes::{
+        user_context::{session_state::TypedSession, user_context},
+        utils,
+    },
+};
 
 const HERO_BG_CLASS: &str = "hero-bg-submit";
 

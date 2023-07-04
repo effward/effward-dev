@@ -22,19 +22,19 @@ pub async fn user(
     let path_user = path.into_inner();
     let user = match user_store.get_by_public_id(&path_user).await {
         Ok(u) => u,
-        Err(entity_error) => {
-            match entity_error {
-                EntityError::InvalidInput("public_id", _) => match user_store.get_by_name(&path_user).await {
+        Err(entity_error) => match entity_error {
+            EntityError::InvalidInput("public_id", _) => {
+                match user_store.get_by_name(&path_user).await {
                     Ok(u) => u,
                     Err(e) => {
                         return utils::redirect_entity_error(e, "user");
                     }
-                },
-                _ => {
-                    return utils::redirect_entity_error(entity_error, "user");
                 }
             }
-        }
+            _ => {
+                return utils::redirect_entity_error(entity_error, "user");
+            }
+        },
     };
 
     let user_model = UserModel::from(user);

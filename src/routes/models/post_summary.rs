@@ -28,7 +28,7 @@ pub async fn translate_post_summary(
     pool: &MySqlPool,
     post_entity: &PostEntity,
     user_store: Data<dyn UserStore>,
-    ) -> Result<PostSummary, EntityError> {
+) -> Result<PostSummary, EntityError> {
     let author_entity = user_store.get_by_id(post_entity.author_id).await?;
     let author = UserModel::from(author_entity);
 

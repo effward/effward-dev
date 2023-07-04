@@ -2,7 +2,10 @@ use actix_web::{web::Data, HttpResponse, Responder};
 use actix_web_flash_messages::IncomingFlashMessages;
 use tera::Tera;
 
-use crate::{routes::user_context::{session_state::TypedSession, user_context}, entities::user::UserStore};
+use crate::{
+    entities::user::UserStore,
+    routes::user_context::{session_state::TypedSession, user_context},
+};
 
 const HERO_BG_CLASS: &str = "hero-bg-signup";
 

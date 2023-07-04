@@ -5,10 +5,13 @@ use actix_web_flash_messages::IncomingFlashMessages;
 
 use tera::Tera;
 
-use crate::{routes::user_context::{
-    session_state::TypedSession,
-    user_context::{self, UserContext},
-}, entities::user::UserStore};
+use crate::{
+    entities::user::UserStore,
+    routes::user_context::{
+        session_state::TypedSession,
+        user_context::{self, UserContext},
+    },
+};
 
 const PAGE_NAME: &str = "error - not found";
 const HERO_BG_CLASS: &str = "hero-bg-404";
