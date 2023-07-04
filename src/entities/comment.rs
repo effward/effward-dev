@@ -1,10 +1,12 @@
 use chrono::{NaiveDateTime, Utc};
+use moka::future::Cache;
+use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
 use super::{content, EntityError};
 
-#[derive(Clone, Debug, sqlx::FromRow)]
+#[derive(Clone, Debug, Deserialize, Serialize, sqlx::FromRow)]
 pub struct CommentEntity {
     pub id: u64,
     pub public_id: Vec<u8>,
@@ -99,11 +101,15 @@ WHERE post_id = ?
 
 pub async fn get_by_post_id_parent_id(
     pool: &MySqlPool,
+    cache: Cache<String, Vec<u8>>,
     post_id: &u64,
     parent_id: Option<u64>,
     start_index: Option<u64>,
     count: u8,
 ) -> Result<Vec<CommentEntity>, EntityError> {
+    let key = format!("comment::post_id_parent_id::{}:{:?}:{:?}:{}", post_id, parent_id, start_index, count);
+
+    
     let comment_entities = match parent_id {
         Some(parent_id) => match start_index {
             Some(start_index) => {
@@ -193,5 +199,7 @@ LIMIT ?
         },
     };
 
+    let encoded = bincode::serialize(&comment_entities).unwrap();
+    cache.insert(key, encoded).await;
     Ok(comment_entities)
 }
