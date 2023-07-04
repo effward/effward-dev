@@ -3,11 +3,10 @@ use actix_web_flash_messages::FlashMessage;
 use log::{error, info};
 use secrecy::Secret;
 use serde::Deserialize;
-use sqlx::MySqlPool;
 
 use crate::{
-    entities::{user, EntityError},
-    routes::{models, user_context::session_state::TypedSession, utils},
+    entities::{user::UserStore, EntityError},
+    routes::{models::UserModel, user_context::session_state::TypedSession, utils},
 };
 
 #[derive(Debug, Deserialize)]
@@ -19,25 +18,25 @@ pub struct LoginRequest {
 pub async fn process_login(
     session: TypedSession,
     data: web::Form<LoginRequest>,
-    pool: web::Data<MySqlPool>,
-) -> impl Responder {
-    do_login_and_redirect(session, pool, &data.username, &data.password).await
+    user_store: web::Data<dyn UserStore>,
+    ) -> impl Responder {
+    do_login_and_redirect(session, user_store, &data.username, &data.password).await
 }
 
 pub async fn do_login_and_redirect(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
+    user_store: web::Data<dyn UserStore>,
     username: &String,
     password: &Secret<String>,
 ) -> HttpResponse {
-    let result = user::get_by_name_password(&pool, username, password).await;
+    let result = user_store.get_by_name_password(username, password).await;
 
     match result {
-        Ok(user_entity) => {
-            let user = models::translate_user(user_entity);
+        Ok(user) => {
+            let user_model = UserModel::from(user);
 
             session.renew();
-            match session.insert_user_id(user.id) {
+            match session.insert_user_id(user_model.id) {
                 Ok(_) => {
                     info!("Successfully set user session");
                     FlashMessage::success("successfully logged in").send();

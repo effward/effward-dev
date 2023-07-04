@@ -1,13 +1,11 @@
+use actix_web::web::Data;
 use actix_web_flash_messages::{IncomingFlashMessages, Level};
 use log::error;
 use serde::{Deserialize, Serialize};
-use shortguid::ShortGuid;
-use sqlx::MySqlPool;
 use tera::Context;
 
 use crate::{
-    entities::user::{self, UserEntity},
-    routes::models::{self, User},
+    routes::models::UserModel, entities::user::{UserStore, User},
 };
 
 use super::{session_state::TypedSession, UserContextError};
@@ -15,7 +13,7 @@ use super::{session_state::TypedSession, UserContextError};
 const DEFAULT_HERO_BG_CLASS: &str = "hero-bg-landing";
 
 pub struct UserContext {
-    pub auth_user: Option<User>,
+    pub auth_user: Option<UserModel>,
     pub context: Context,
     pub flash_messages: Vec<String>,
 }
@@ -53,7 +51,7 @@ pub fn get_empty(page_name: &str, image_path: Option<&str>) -> UserContext {
 pub async fn build(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: &MySqlPool,
+    user_store: Data<dyn UserStore>,
     page_name: &str,
     image_path: Option<&str>,
 ) -> UserContext {
@@ -61,7 +59,7 @@ pub async fn build(
 
     insert_title(&mut context, page_name);
     let flash_messages = insert_notifications(&mut context, flash_messages);
-    let auth_user = insert_auth_user(&mut context, session, pool).await;
+    let auth_user = insert_auth_user(&mut context, session, user_store).await;
     insert_hero_bg_class(&mut context, image_path);
 
     UserContext {
@@ -73,15 +71,12 @@ pub async fn build(
 
 pub async fn get_auth_user_entity(
     session: TypedSession,
-    pool: &MySqlPool,
-) -> Result<UserEntity, UserContextError> {
+    user_store: Data<dyn UserStore>,
+    ) -> Result<User, UserContextError> {
     match session.get_user_id()? {
         None => Err(UserContextError::NotAuthenticated),
         Some(user_id) => {
-            let short_uuid = ShortGuid::try_parse(user_id)?;
-            let auth_user_entity = user::get_by_public_id(&pool, *short_uuid.as_uuid()).await?;
-
-            Ok(auth_user_entity)
+            Ok(user_store.get_by_public_id(&user_id).await?)
         }
     }
 }
@@ -126,11 +121,11 @@ fn insert_notifications(
 async fn insert_auth_user(
     context: &mut Context,
     session: TypedSession,
-    pool: &MySqlPool,
-) -> Option<User> {
-    match get_auth_user_entity(session, pool).await {
+    user_store: Data<dyn UserStore>,
+    ) -> Option<UserModel> {
+    match get_auth_user_entity(session, user_store).await {
         Ok(auth_user_entity) => {
-            let auth_user = models::translate_user(auth_user_entity);
+            let auth_user = UserModel::from(auth_user_entity);
             context.insert("auth_user", &auth_user);
             context.insert("is_auth", &true);
             Some(auth_user)

@@ -14,7 +14,7 @@ use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
 use actix_web::http::StatusCode;
 use actix_web::middleware::{Compress, ErrorHandlers, Logger};
-use actix_web::web::scope;
+use actix_web::web::{scope, Data};
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::{FlashMessagesFramework, Level};
@@ -24,8 +24,10 @@ use log::{error, warn};
 use sqlx::mysql::MySqlPoolOptions;
 use std::env;
 use std::str;
+use std::sync::Arc;
 use tera::Tera;
 
+use crate::entities::user::UserStore;
 use crate::routes::{
     comment, error, health, index, login, logout, post, posts, signup, submit, user,
 };
@@ -61,6 +63,12 @@ async fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
+
+    let cache = entities::cache::Cache::new();
+    let sql_user_store = entities::user::SqlUserStore::new(pool.clone());
+    let cached_user_store = entities::user::CachedUserStore::new(cache, sql_user_store);
+    let user_store_arc: Arc<dyn UserStore> = Arc::new(cached_user_store);
+    let user_store: Data<dyn UserStore> = Data::from(user_store_arc);
 
     warn!("🌎 Initializing Tera static templates...");
     let tera = match Tera::new("templates/**/*") {
@@ -131,14 +139,14 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Compress::default())
             .wrap(cors)
-            .wrap(
+            /*.wrap(
                 ErrorHandlers::new()
                     .default_handler(error::generic::get::render_generic)
                     .handler(
                         StatusCode::NOT_FOUND,
                         error::not_found::get::render_not_found,
                     ),
-            )
+            )*/
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(
                 redis_store.clone(),
@@ -166,6 +174,7 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))
+            .app_data(user_store.clone())
     })
     .bind(("0.0.0.0", 8080))?
     .run()

@@ -1,19 +1,20 @@
-use chrono::{NaiveDateTime, Utc};
+use actix_web::web::Data;
+use chrono::NaiveDateTime;
 use serde::Serialize;
 use sqlx::MySqlPool;
 use std::cmp;
 use substring::Substring;
 
-use crate::entities::{comment, content, post::PostEntity, user, EntityError};
+use crate::entities::{comment, content, post::PostEntity, user::UserStore, EntityError};
 
-use super::{translate_user, utils, User};
+use super::{utils, UserModel};
 
 const POST_PREVIEW_LENGTH: usize = 250;
 
 #[derive(Serialize)]
 pub struct PostSummary {
     pub id: String,
-    pub author: User,
+    pub author: UserModel,
     pub title: String,
     pub created: NaiveDateTime,
     pub created_pretty: String,
@@ -26,9 +27,10 @@ pub struct PostSummary {
 pub async fn translate_post_summary(
     pool: &MySqlPool,
     post_entity: &PostEntity,
-) -> Result<PostSummary, EntityError> {
-    let author_entity = user::get_by_id(pool, post_entity.author_id).await?;
-    let author = translate_user(author_entity);
+    user_store: Data<dyn UserStore>,
+    ) -> Result<PostSummary, EntityError> {
+    let author_entity = user_store.get_by_id(post_entity.author_id).await?;
+    let author = UserModel::from(author_entity);
 
     let mut post_preview: Option<String> = None;
     let content = match post_entity.content_id {

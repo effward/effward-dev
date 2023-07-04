@@ -11,7 +11,7 @@ pub struct EmailEntity {
     pub created: NaiveDateTime,
 }
 
-pub async fn get_or_create_id(pool: &MySqlPool, email: &String) -> Result<u64, EntityError> {
+pub async fn get_or_create_id(pool: &MySqlPool, email: &str) -> Result<u64, EntityError> {
     let email_lower = email.to_lowercase();
     if !EmailAddress::is_valid(&email_lower) {
         return Err(EntityError::InvalidInput("email", "email is invalid"));
