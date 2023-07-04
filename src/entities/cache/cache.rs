@@ -1,6 +1,7 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
 use dashmap::{mapref::one::Ref, DashMap};
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
@@ -11,7 +12,7 @@ pub struct Cache {
     map: DashMap<String, Vec<u8>>,
 }
 
-#[derive(Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 struct CacheValue<T> {
     pub value: T,
     pub expiry: Option<DateTime<Utc>>,
@@ -26,7 +27,7 @@ impl Cache {
 
     fn insert<T>(&self, key: String, value: T, expiry: Option<Duration>) -> Option<T>
     where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
         // TODO: handle error
         let encoded = wrap_and_encode(value, expiry);
@@ -37,7 +38,7 @@ impl Cache {
 
     fn get<T>(&self, key: String) -> Option<T>
     where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
         // TODO: handle error
         let encoded = self.map.get(&key);
@@ -47,45 +48,59 @@ impl Cache {
 
     fn remove<T>(&self, key: String) -> Option<T>
     where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
         let encoded = self.map.remove(&key);
 
         decode_and_unwrap(encoded)
     }
 
-    pub async fn get_cached<T, Fut>(
+    pub async fn get_cached<T, Fut, F>(
         &self,
         key: String,
+        get_source: F,
+        keys_builder: fn(&T) -> Vec<String>,
         expiry: Option<Duration>,
-        get_source: fn() -> Fut,
     ) -> Result<T, EntityError>
     where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
-        Fut: Future<Output = Result<T, EntityError>> + 'static,
+        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
+        Fut: Future<Output = Result<T, EntityError>> + Sized,
+        F: FnOnce() -> Fut,
     {
+        info!("Getting: {}", key);
         match self.get(key.to_owned()) {
-            Some(value) => Ok(value),
+            Some(value) => {
+                info!("Got from cache: {:?}", value);
+                Ok(value)
+            },
             None => {
+                info!("Not found in cache: {}", key);
                 let source_value = get_source().await?;
-                self.insert(key, source_value.to_owned(), expiry);
+                info!("Got from source: {:?}", source_value);
+                let keys = keys_builder(&source_value);
+                for key in keys {
+                    info!("Adding to cache: {} = {:?}", key, source_value);
+                    self.insert(key, source_value.clone(), expiry);
+                }
+
                 Ok(source_value)
             }
         }
     }
 
-    pub async fn insert_cached<T, Fut>(
+    pub async fn insert_cached<T, Fut, F>(
         &self,
-        insert_source: fn() -> Fut,
-        keys_builder: fn(T) -> Vec<String>,
+        insert_source: F,
+        keys_builder: fn(&T) -> Vec<String>,
         expiry: Option<Duration>,
     ) -> Result<T, EntityError>
     where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
         Fut: Future<Output = Result<T, EntityError>> + Sized,
+        F: FnOnce() -> Fut,
     {
         let source_value = insert_source().await?;
-        let keys = keys_builder(source_value.clone());
+        let keys = keys_builder(&source_value);
         for key in keys {
             self.insert(key, source_value.clone(), expiry);
         }
@@ -93,7 +108,7 @@ impl Cache {
         Ok(source_value)
     }
 }
-
+/*
 trait CachableTraitGuard {
     type Mirror: for<'a> Deserialize<'a> + Serialize + PartialEq + Clone;
 }
@@ -107,30 +122,28 @@ where
 
 type CacheableValue<T> = <T as CachableTraitGuard>::Mirror;
 
-trait InsertSourceResultTraitGuard<Id>
-where
-    Id: Clone,
+trait CacheableFutureTraitGuard<T>
 {
-    type Mirror: Future<Output = Result<Id, EntityError>> + 'static;
+    type Mirror: Future<Output = Result<CacheValue<T>, EntityError>> + Sized;
 }
 
-impl<T, Id> InsertSourceResultTraitGuard<Id> for T
-where
-    T: Future<Output = Result<Id, EntityError>> + 'static,
-    Id: Clone,
+impl<T, Fut> CacheableFutureTraitGuard<T> for T
+    where Fut: Future<Output = Result<CacheValue<T>, EntityError>> + Sized
 {
     type Mirror = Self;
 }
 
-type InsertSourceResult<T, Id> = <T as InsertSourceResultTraitGuard<Id>>::Mirror;
+type CacheableFutureValue<T> = <T as CacheableFutureTraitGuard<T>>::Mirror;
 
-type InsertSource<T, Id> = fn() -> InsertSourceResult<T, Id>;
+pub type InsertSource<T> = fn() -> CacheableFutureValue<T>;
+
 
 // type InsertSource<Id> = fn() -> Future<Output = Result<Id, EntityError>>;
+*/
 
 fn wrap_and_encode<T>(value: T, expiry: Option<Duration>) -> Vec<u8>
 where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     let deadline = match expiry {
         Some(expiry) => Some(Utc::now() + expiry),
@@ -146,7 +159,7 @@ where
 
 fn decode_and_unwrap_value<T>(encoded: Option<Vec<u8>>) -> Option<T>
 where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some(encoded) => do_decode_and_unwrap(&encoded),
@@ -156,7 +169,7 @@ where
 
 fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Option<T>
 where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some((_, encoded)) => do_decode_and_unwrap(&encoded),
@@ -166,7 +179,7 @@ where
 
 fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Option<T>
 where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some(encoded) => do_decode_and_unwrap(encoded.value()),
@@ -176,17 +189,25 @@ where
 
 fn do_decode_and_unwrap<T>(encoded: &Vec<u8>) -> Option<T>
 where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
+    info!("Got encoded value: {:?}", encoded);
     let wrapped: CacheValue<T> = bincode::deserialize(&encoded[..]).unwrap();
+    info!("Got decoded value: {:?}", wrapped);
     match wrapped.expiry {
         Some(expiry) => {
+            info!("Got expiry: {:?}", expiry);
             if expiry > Utc::now() {
+                info!("Not expired");
                 Some(wrapped.value)
             } else {
+                info!("Expired");
                 None
             }
         }
-        None => Some(wrapped.value),
+        None => {
+            info!("No expiration set");
+            Some(wrapped.value)
+        },
     }
 }

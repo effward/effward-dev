@@ -1,5 +1,3 @@
-use std::future::ready;
-
 use async_trait::async_trait;
 use secrecy::Secret;
 
@@ -25,10 +23,6 @@ where
     }
 }
 
-async fn insert_source() -> Result<User, EntityError> {
-    ready(Err(EntityError::DuplicateKey)).await
-}
-
 #[async_trait]
 impl<T> UserStore for CachedUserStore<T>
 where
@@ -42,13 +36,8 @@ where
     ) -> Result<User, EntityError> {
         self.cache
             .insert_cached(
-                insert_source,
-                |user: User| {
-                    vec![
-                        format!("id:{}", user.id),
-                        format!("public_id:{}", user.public_id),
-                    ]
-                },
+                || async { self.source.insert(name, email, password).await },
+                build_keys,
                 None,
             )
             .await
@@ -59,18 +48,48 @@ where
         name: &str,
         password: &Secret<String>,
     ) -> Result<User, EntityError> {
+        // Never cache because it's used for password checks
         self.source.get_by_name_password(name, password).await
     }
 
     async fn get_by_name(&self, name: &str) -> Result<User, EntityError> {
-        self.source.get_by_name(name).await
+        let key = build_name_key(name);
+        self.cache.get_cached(key,|| async {
+            self.source.get_by_name(name).await
+        }, build_keys, None).await
     }
 
     async fn get_by_id(&self, id: u64) -> Result<User, EntityError> {
-        self.source.get_by_id(id).await
+        let key = build_id_key(id);
+        self.cache.get_cached(key, || async {
+            self.source.get_by_id(id).await
+        }, build_keys, None).await
     }
 
     async fn get_by_public_id(&self, public_id: &str) -> Result<User, EntityError> {
-        self.source.get_by_public_id(public_id).await
+        let key = build_public_id_key(public_id);
+        self.cache.get_cached(key, || async {
+            self.source.get_by_public_id(public_id).await
+        }, build_keys, None).await
     }
+}
+
+fn build_keys(user: &User) -> Vec<String> {
+    vec![
+        build_id_key(user.id),
+        build_public_id_key(&user.public_id),
+        build_name_key(&user.name)
+    ]
+}
+
+fn build_id_key(id: u64) -> String {
+    format!("id:{}", id)
+}
+
+fn build_public_id_key(public_id: &str) -> String {
+    format!("public_id:{}", public_id)
+}
+
+fn build_name_key(name: &str) -> String {
+    format!("name:{}", name)
 }
