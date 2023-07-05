@@ -4,11 +4,8 @@ use std::cmp;
 use substring::Substring;
 
 use crate::entities::{
-    comment::CommentStore,
-    content::ContentStore,
-    post::Post,
-    user::UserStore,
-    EntityError, EntityStores,
+    comment::CommentStore, content::ContentStore, post::Post, user::UserStore, EntityError,
+    EntityStores,
 };
 
 use super::{utils, UserModel};

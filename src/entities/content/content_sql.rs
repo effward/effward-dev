@@ -64,7 +64,7 @@ async fn get_or_create(pool: &MySqlPool, body: &str) -> Result<ContentEntity, En
         Ok(content_entity) => Ok(content_entity),
         Err(e) => match e {
             EntityError::NotFound => Ok(insert_by_body_hash(pool, body, &body_hash).await?),
-            _ => Err(e)
+            _ => Err(e),
         },
     }
 }

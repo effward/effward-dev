@@ -198,10 +198,7 @@ WHERE id = ?
     Ok(user_entity)
 }
 
-async fn get_by_public_id(
-    pool: &MySqlPool,
-    public_id: Uuid,
-) -> Result<UserEntity, EntityError> {
+async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<UserEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
     let user_entity = sqlx::query_as!(
         UserEntity,

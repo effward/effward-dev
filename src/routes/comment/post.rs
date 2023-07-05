@@ -2,11 +2,7 @@ use actix_web::{web, Responder};
 use serde::Deserialize;
 
 use crate::{
-    entities::{
-        comment::CommentStore,
-        post::PostStore,
-        EntityStores,
-    },
+    entities::{comment::CommentStore, post::PostStore, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context, UserContextError},
         utils,
