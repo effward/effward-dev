@@ -14,7 +14,7 @@ use actix_session::SessionMiddleware;
 use actix_web::cookie::Key;
 use actix_web::http::StatusCode;
 use actix_web::middleware::{Compress, ErrorHandlers, Logger};
-use actix_web::web::{scope, Data, ServiceConfig};
+use actix_web::web::scope;
 use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::{FlashMessagesFramework, Level};
@@ -22,13 +22,10 @@ use dotenv::dotenv;
 use env_logger;
 use log::{error, warn};
 use sqlx::mysql::MySqlPoolOptions;
-use sqlx::MySqlPool;
 use std::env;
 use std::str;
-use std::sync::Arc;
 use tera::Tera;
 
-use crate::entities::user::UserStore;
 use crate::routes::{
     comment, error, health, index, login, logout, post, posts, signup, submit, user,
 };
@@ -136,14 +133,14 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Compress::default())
             .wrap(cors)
-            /*.wrap(
+            .wrap(
                 ErrorHandlers::new()
                     .default_handler(error::generic::get::render_generic)
                     .handler(
                         StatusCode::NOT_FOUND,
                         error::not_found::get::render_not_found,
                     ),
-            )*/
+            )
             .wrap(message_framework.clone())
             .wrap(SessionMiddleware::new(
                 redis_store.clone(),

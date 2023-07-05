@@ -5,7 +5,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use tera::{Context, Tera};
 
 use crate::{
-    entities::{user::UserStore, EntityStores},
+    entities::EntityStores,
     routes::{
         user_context::{session_state::TypedSession, user_context},
         utils,

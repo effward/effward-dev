@@ -16,11 +16,6 @@ pub fn success_redirect(location: &str, success_message: &str) -> HttpResponse {
     redirect(location)
 }
 
-pub fn info_redirect(location: &str, info_message: &str) -> HttpResponse {
-    FlashMessage::info(info_message).send();
-    redirect(location)
-}
-
 pub fn warning_redirect(location: &str, warning_message: &str) -> HttpResponse {
     FlashMessage::warning(warning_message).send();
     redirect(location)

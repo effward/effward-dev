@@ -1,15 +1,12 @@
-use std::sync::{Arc, Mutex};
-
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use secrecy::Secret;
 use serde::Deserialize;
-use sqlx::MySqlPool;
 
 use crate::{
     entities::{
         user::{
-            User, UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
+            UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
             MIN_USERNAME_LENGTH,
         },
         EntityError, EntityStores,

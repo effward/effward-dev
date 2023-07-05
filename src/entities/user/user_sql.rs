@@ -144,7 +144,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     Ok(user_id)
 }
 
-pub async fn get_by_name_password(
+async fn get_by_name_password(
     pool: &MySqlPool,
     name: &str,
     password: &Secret<String>,
@@ -166,7 +166,7 @@ pub async fn get_by_name_password(
     }
 }
 
-pub async fn get_by_name(pool: &MySqlPool, name: &str) -> Result<UserEntity, EntityError> {
+async fn get_by_name(pool: &MySqlPool, name: &str) -> Result<UserEntity, EntityError> {
     let user_entity = sqlx::query_as!(
         UserEntity,
         r#"
@@ -182,7 +182,7 @@ WHERE name = ?
     Ok(user_entity)
 }
 
-pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<UserEntity, EntityError> {
+async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<UserEntity, EntityError> {
     let user_entity = sqlx::query_as!(
         UserEntity,
         r#"
@@ -198,7 +198,7 @@ WHERE id = ?
     Ok(user_entity)
 }
 
-pub async fn get_by_public_id(
+async fn get_by_public_id(
     pool: &MySqlPool,
     public_id: Uuid,
 ) -> Result<UserEntity, EntityError> {

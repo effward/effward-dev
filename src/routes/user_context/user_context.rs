@@ -1,4 +1,3 @@
-use actix_web::web::Data;
 use actix_web_flash_messages::{IncomingFlashMessages, Level};
 use log::error;
 use serde::{Deserialize, Serialize};

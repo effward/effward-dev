@@ -4,7 +4,6 @@ use actix_web::{
 };
 use log::error;
 use serde::Deserialize;
-use sqlx::MySqlPool;
 
 use crate::{
     entities::{post::PostStore, EntityStores},
@@ -23,7 +22,6 @@ pub struct SubmitRequest {
 
 pub async fn process_submission(
     session: TypedSession,
-    pool: Data<MySqlPool>,
     data: Form<SubmitRequest>,
     stores: Data<EntityStores>,
 ) -> impl Responder {

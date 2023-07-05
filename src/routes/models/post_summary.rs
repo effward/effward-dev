@@ -4,7 +4,7 @@ use std::cmp;
 use substring::Substring;
 
 use crate::entities::{
-    comment::{self, CommentStore},
+    comment::CommentStore,
     content::ContentStore,
     post::Post,
     user::UserStore,

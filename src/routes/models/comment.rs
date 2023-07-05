@@ -3,8 +3,8 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 
 use crate::entities::{
-    comment::{self, Comment, CommentStore},
-    content::{self, ContentStore},
+    comment::{Comment, CommentStore},
+    content::ContentStore,
     user::UserStore,
     EntityError, EntityStores,
 };

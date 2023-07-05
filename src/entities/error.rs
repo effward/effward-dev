@@ -1,5 +1,3 @@
-use bincode::ErrorKind;
-
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum EntityError {
     #[error("internal error")]

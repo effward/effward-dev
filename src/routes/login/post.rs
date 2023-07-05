@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use log::{error, info};

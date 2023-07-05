@@ -1,11 +1,9 @@
 use actix_web::{web, Responder};
 use serde::Deserialize;
-use shortguid::ShortGuid;
-use sqlx::MySqlPool;
 
 use crate::{
     entities::{
-        comment::{self, CommentStore},
+        comment::CommentStore,
         post::PostStore,
         EntityStores,
     },
@@ -24,7 +22,6 @@ pub struct CommentRequest {
 
 pub async fn process_comment(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
     data: web::Form<CommentRequest>,
     stores: web::Data<EntityStores>,
 ) -> impl Responder {

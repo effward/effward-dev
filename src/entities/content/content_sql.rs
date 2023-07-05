@@ -60,9 +60,12 @@ impl ContentStore for SqlContentStore {
 
 async fn get_or_create(pool: &MySqlPool, body: &str) -> Result<ContentEntity, EntityError> {
     let body_hash = hash_body(body)?;
-    match try_get_by_body_hash(pool, body, &body_hash).await {
+    match try_get_by_body_hash(pool, &body_hash).await {
         Ok(content_entity) => Ok(content_entity),
-        Err(e) => Ok(insert_by_body_hash(pool, body, &body_hash).await?),
+        Err(e) => match e {
+            EntityError::NotFound => Ok(insert_by_body_hash(pool, body, &body_hash).await?),
+            _ => Err(e)
+        },
     }
 }
 
@@ -87,7 +90,7 @@ WHERE id = ?
 
 async fn get_by_body(pool: &MySqlPool, body: &str) -> Result<ContentEntity, EntityError> {
     let body_hash = hash_body(body)?;
-    try_get_by_body_hash(pool, body, &body_hash).await
+    try_get_by_body_hash(pool, &body_hash).await
 }
 
 async fn insert_by_body_hash(
@@ -119,7 +122,6 @@ VALUES (?, ?, ?)
 
 async fn try_get_by_body_hash(
     pool: &MySqlPool,
-    body: &str,
     body_hash: &Vec<u8>,
 ) -> Result<ContentEntity, EntityError> {
     Ok(sqlx::query_as!(
