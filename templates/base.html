@@ -50,6 +50,10 @@
             height: 100%;
         }
 
+        div.content .subtitle {
+            color: #262626;
+        }
+
         .effward-dev-body .box, .effward-dev-body .input, .effward-dev-body .button {
             border-radius: 0;
         }
@@ -86,7 +90,7 @@
         }
         @media (min-width: 1216px) {
             .hero-bg-landing {
-                background-size: 1000px;
+                background-size: auto 100%;
             }
         }
 
@@ -99,7 +103,7 @@
         }
         @media (min-width: 1216px) {
             .hero-bg-login {
-                background-size: 1200px;
+                background-size: auto 100%;
                 background-position: bottom -58px center;
             }
         }
@@ -107,13 +111,12 @@
         .hero-bg-signup {
             background-color: #e0e0e0;
             background-image: url('/static/img/hero_town.svg');
-            background-position: bottom -58px center;
+            background-position: bottom -5px center;
             background-repeat: no-repeat;
-            background-size: 102%;
+            background-size: 90% auto;
         }
         @media (min-width: 1216px) {
             .hero-bg-signup {
-                background-size: 1200px;
                 background-position: bottom -58px center;
             }
         }
@@ -123,17 +126,12 @@
             background-image: url('/static/img/hero_404.svg');
             background-position: bottom -20px center;
             background-repeat: no-repeat;
-            background-size: 105%;
+            background-size: auto 100%;
         }
-        @media (min-width: 1408px) {
-            .hero-bg-404 {
-                background-size: 1408px auto;
-            }
-        }
-        @media (max-width: 1023px) {
+        @media (max-width: 1223px) {
             .hero-bg-404 {
                 background-size: 140%;
-                background-position: top 200px center;
+                background-position: top 180px center;
             }
         }
 
@@ -146,13 +144,13 @@
         }
         @media (min-width: 1408px) {
             .hero-bg-500 {
-                background-size: 1408px auto;
+                background-size: auto 100%;
             }
         }
         @media (max-width: 1023px) {
             .hero-bg-500 {
                 background-size: 110%;
-                background-position: top 250px center;
+                background-position: top 220px center;
             }
         }
 
@@ -162,12 +160,11 @@
             background-position: bottom -25px center;
             background-repeat: no-repeat;
             background-size: 102%;
-            background-attachment: fixed;
         }
-        @media (min-width: 1416px) {
+        @media (min-width: 1216px) {
             .hero-bg-post {
                 background-position: bottom -200px center;
-                background-size: 1400px auto;
+                background-size: 100% auto;
             }
         }
 
@@ -177,12 +174,11 @@
             background-position: bottom -125px center;
             background-repeat: no-repeat;
             background-size: 102%;
-            background-attachment: fixed;
         }
         @media (min-width: 1416px) {
             .hero-bg-posts {
                 background-position: bottom -175px center;
-                background-size: 1400px auto;
+                background-size: 100% auto;
             }
         }
         @media (max-width: 768px) {
@@ -197,12 +193,11 @@
             background-position: bottom -25px center;
             background-repeat: no-repeat;
             background-size: 102%;
-            background-attachment: fixed;
         }
         @media (min-width: 1416px) {
             .hero-bg-submit {
                 background-position: bottom -180px center;
-                background-size: 1400px auto;
+                background-size: 100% auto;
             }
         }
 
@@ -211,7 +206,7 @@
         }
 
         .is-barely-transparent {
-            background: rgba(245, 245, 245, 0.9);
+            background: rgba(245, 245, 245, 0.95);
         }
         .is-barely-transparent.is-hover:hover {
             background: rgba(245, 245, 245, 1);
