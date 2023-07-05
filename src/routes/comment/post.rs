@@ -47,7 +47,7 @@ pub async fn process_comment(
             {
                 Ok(_) => utils::success_redirect(
                     &format!("/post/{}", data.post_id),
-                    "new comment successfully submitted",
+                    "new comment successfully submitted, it should appear momentarily...",
                 ),
                 Err(_) => utils::warning_redirect(
                     &format!("/post/{}", data.post_id),

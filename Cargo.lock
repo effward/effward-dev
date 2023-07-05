@@ -1105,7 +1105,6 @@ dependencies = [
  "dotenv",
  "email_address",
  "env_logger",
- "futures",
  "hex",
  "html-escape",
  "log",

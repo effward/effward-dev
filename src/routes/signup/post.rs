@@ -63,6 +63,7 @@ fn signup_error_redirect(entity_error: EntityError) -> HttpResponse {
         EntityError::MalformedData => SignupErrorCode::Unknown,
         EntityError::NotFound => SignupErrorCode::Unknown,
         EntityError::DuplicateKey => SignupErrorCode::UserAlreadyExists,
+        EntityError::CachingError(_) => return utils::redirect_entity_error(entity_error, "user"),
     };
 
     let error_message = get_error_message(error_code);

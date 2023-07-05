@@ -70,6 +70,7 @@ fn login_error_redirect(entity_error: EntityError) -> HttpResponse {
         EntityError::MalformedData => LoginErrorCode::MalformedPassword,
         EntityError::NotFound => LoginErrorCode::InvalidUsername,
         EntityError::DuplicateKey => LoginErrorCode::Unknown,
+        EntityError::CachingError(_) => return utils::redirect_entity_error(entity_error, "user"),
     };
 
     let error_message = get_error_message(error_code);

@@ -1,7 +1,7 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
 use dashmap::{mapref::one::Ref, DashMap};
-use log::{debug, info};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
@@ -25,18 +25,23 @@ impl Cache {
         }
     }
 
-    fn insert<T>(&self, key: String, value: T, expiry: Option<Duration>) -> Option<T>
+    fn insert<T>(
+        &self,
+        key: String,
+        value: T,
+        expiry: Option<Duration>,
+    ) -> Result<Option<T>, EntityError>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
         // TODO: handle error
-        let encoded = wrap_and_encode(value, expiry);
+        let encoded = wrap_and_encode(value, expiry)?;
         let existing = self.map.insert(key, encoded);
 
         decode_and_unwrap_value(existing)
     }
 
-    fn get<T>(&self, key: String) -> Option<T>
+    fn get<T>(&self, key: String) -> Result<Option<T>, EntityError>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
@@ -46,7 +51,7 @@ impl Cache {
         decode_and_unwrap_ref(encoded)
     }
 
-    fn remove<T>(&self, key: String) -> Option<T>
+    fn remove<T>(&self, key: String) -> Result<Option<T>, EntityError>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
     {
@@ -70,19 +75,21 @@ impl Cache {
         FKey: FnOnce(&T) -> Vec<String>,
     {
         info!("Getting: {}", key);
-        match self.get(key.to_owned()) {
+        match self.get(key.to_owned())? {
             Some(value) => {
                 info!("Got from cache: {:?}", value);
                 Ok(value)
             }
             None => {
-                info!("Not found in cache: {}", key);
                 let source_value = get_source().await?;
                 info!("Got from source: {:?}", source_value);
                 let keys = keys_builder(&source_value);
                 for key in keys {
                     info!("Adding to cache: {} = {:?}", key, source_value);
-                    self.insert(key, source_value.clone(), expiry);
+                    match self.insert(key, source_value.clone(), expiry) {
+                        Ok(_) => (),
+                        Err(e) => error!("Error adding value to cache. Error: {:?}", e),
+                    }
                 }
 
                 Ok(source_value)
@@ -104,46 +111,17 @@ impl Cache {
         let source_value = insert_source().await?;
         let keys = keys_builder(&source_value);
         for key in keys {
-            self.insert(key, source_value.clone(), expiry);
+            match self.insert(key, source_value.clone(), expiry) {
+                Ok(_) => (),
+                Err(e) => error!("Error adding value to cache. Error: {:?}", e),
+            }
         }
 
         Ok(source_value)
     }
 }
-/*
-trait CachableTraitGuard {
-    type Mirror: for<'a> Deserialize<'a> + Serialize + PartialEq + Clone;
-}
 
-impl<T> CachableTraitGuard for T
-where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone,
-{
-    type Mirror = Self;
-}
-
-type CacheableValue<T> = <T as CachableTraitGuard>::Mirror;
-
-trait CacheableFutureTraitGuard<T>
-{
-    type Mirror: Future<Output = Result<CacheValue<T>, EntityError>> + Sized;
-}
-
-impl<T, Fut> CacheableFutureTraitGuard<T> for T
-    where Fut: Future<Output = Result<CacheValue<T>, EntityError>> + Sized
-{
-    type Mirror = Self;
-}
-
-type CacheableFutureValue<T> = <T as CacheableFutureTraitGuard<T>>::Mirror;
-
-pub type InsertSource<T> = fn() -> CacheableFutureValue<T>;
-
-
-// type InsertSource<Id> = fn() -> Future<Output = Result<Id, EntityError>>;
-*/
-
-fn wrap_and_encode<T>(value: T, expiry: Option<Duration>) -> Vec<u8>
+fn wrap_and_encode<T>(value: T, expiry: Option<Duration>) -> Result<Vec<u8>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
@@ -156,56 +134,64 @@ where
         expiry: deadline,
     };
 
-    bincode::serialize(&wrapped_value).unwrap()
+    match bincode::serialize(&wrapped_value) {
+        Ok(encoded) => Ok(encoded),
+        Err(e) => Err(EntityError::CachingError(e.to_string())),
+    }
 }
 
-fn decode_and_unwrap_value<T>(encoded: Option<Vec<u8>>) -> Option<T>
+fn decode_and_unwrap_value<T>(encoded: Option<Vec<u8>>) -> Result<Option<T>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some(encoded) => do_decode_and_unwrap(&encoded),
-        None => None,
+        None => Ok(None),
     }
 }
 
-fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Option<T>
+fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Result<Option<T>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some((_, encoded)) => do_decode_and_unwrap(&encoded),
-        None => None,
+        None => Ok(None),
     }
 }
 
-fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Option<T>
+fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Result<Option<T>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
     match encoded {
         Some(encoded) => do_decode_and_unwrap(encoded.value()),
-        None => None,
+        None => Ok(None),
     }
 }
 
-fn do_decode_and_unwrap<T>(encoded: &Vec<u8>) -> Option<T>
+fn do_decode_and_unwrap<T>(encoded: &Vec<u8>) -> Result<Option<T>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
-    let wrapped: CacheValue<T> = bincode::deserialize(&encoded[..]).unwrap();
+    let wrapped: CacheValue<T> = match bincode::deserialize(&encoded[..]) {
+        Ok(decoded) => decoded,
+        Err(e) => {
+            return Err(EntityError::CachingError(e.to_string()));
+        }
+    };
     debug!("Got decoded value: {:?}", wrapped);
     match wrapped.expiry {
         Some(expiry) => {
             info!("Got expiry: {:?}", expiry);
             if expiry > Utc::now() {
                 info!("Not expired");
-                Some(wrapped.value)
+                Ok(Some(wrapped.value))
             } else {
                 info!("Expired");
-                None
+                Ok(None)
             }
         }
-        None => Some(wrapped.value),
+        None => Ok(Some(wrapped.value)),
     }
 }

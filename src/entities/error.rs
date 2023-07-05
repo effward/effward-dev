@@ -10,6 +10,8 @@ pub enum EntityError {
     NotFound,
     #[error("duplicate key")]
     DuplicateKey,
+    #[error("caching error")]
+    CachingError(String),
 }
 
 impl From<sqlx::Error> for EntityError {
