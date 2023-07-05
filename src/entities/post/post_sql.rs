@@ -1,13 +1,21 @@
-use chrono::{NaiveDateTime, Utc};
+use async_trait::async_trait;
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use log::error;
 use sqlx::MySqlPool;
 use url::Url;
 use uuid::Uuid;
 
-use super::{content, utils, EntityError};
+use crate::entities::{content, utils, EntityError};
+
+use super::{Post, PostStore};
 
 pub const MIN_TITLE_LENGTH: usize = 4;
 pub const MAX_TITLE_LENGTH: usize = 400;
+
+#[derive(Clone)]
+pub struct SqlPostStore {
+    pool: MySqlPool,
+}
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct PostEntity {
@@ -21,7 +29,68 @@ pub struct PostEntity {
     pub updated: NaiveDateTime,
 }
 
-pub async fn insert(
+impl From<PostEntity> for Post {
+    fn from(post_entity: PostEntity) -> Self {
+        Self {
+            id: post_entity.id,
+            public_id: utils::get_readable_public_id(post_entity.public_id),
+            author_id: post_entity.author_id,
+            title: post_entity.title,
+            link: post_entity.link,
+            content_id: post_entity.content_id,
+            created: Utc.from_utc_datetime(&post_entity.created),
+            updated: Utc.from_utc_datetime(&post_entity.updated),
+        }
+    }
+}
+
+impl SqlPostStore {
+    pub fn new(pool: MySqlPool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl PostStore for SqlPostStore {
+    async fn insert(
+        &self,
+        author_id: &u64,
+        title: &String,
+        link: &Option<String>,
+        content: &Option<String>,
+    ) -> Result<Post, EntityError> {
+        let post_id = insert(&self.pool, author_id, title, link, content).await?;
+
+        Ok(self.get_by_id(post_id).await?)
+    }
+
+    async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {
+        Ok(Post::from(get_by_id(&self.pool, id).await?))
+    }
+
+    async fn get_by_public_id(&self, public_id: &str) -> Result<Post, EntityError> {
+        let public_id = utils::parse_public_id(public_id)?;
+
+        Ok(Post::from(get_by_public_id(&self.pool, public_id).await?))
+    }
+
+    async fn get_recent(
+        &self,
+        start_index: Option<u64>,
+        count: u8,
+    ) -> Result<Vec<Post>, EntityError> {
+        let recent_posts = get_recent(&self.pool, start_index, count).await?;
+        let mut posts: Vec<Post> = vec![];
+
+        for post in recent_posts {
+            posts.push(Post::from(post));
+        }
+
+        Ok(posts)
+    }
+}
+
+async fn insert(
     pool: &MySqlPool,
     author_id: &u64,
     title: &String,
@@ -67,7 +136,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     Ok(post_id)
 }
 
-pub async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
+async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
     let post_entity = sqlx::query_as!(
         PostEntity,
         r#"
@@ -83,10 +152,7 @@ WHERE id = ?
     Ok(post_entity)
 }
 
-pub async fn get_by_public_id(
-    pool: &MySqlPool,
-    public_id: Uuid,
-) -> Result<PostEntity, EntityError> {
+async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<PostEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
     let post_entity = sqlx::query_as!(
         PostEntity,
@@ -103,7 +169,7 @@ WHERE public_id = ?
     Ok(post_entity)
 }
 
-pub async fn get_recent(
+async fn get_recent(
     pool: &MySqlPool,
     start_index: Option<u64>,
     count: u8,

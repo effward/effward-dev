@@ -54,23 +54,38 @@ where
 
     async fn get_by_name(&self, name: &str) -> Result<User, EntityError> {
         let key = build_name_key(name);
-        self.cache.get_cached(key,|| async {
-            self.source.get_by_name(name).await
-        }, build_keys, None).await
+        self.cache
+            .get_cached(
+                key,
+                || async { self.source.get_by_name(name).await },
+                build_keys,
+                None,
+            )
+            .await
     }
 
     async fn get_by_id(&self, id: u64) -> Result<User, EntityError> {
         let key = build_id_key(id);
-        self.cache.get_cached(key, || async {
-            self.source.get_by_id(id).await
-        }, build_keys, None).await
+        self.cache
+            .get_cached(
+                key,
+                || async { self.source.get_by_id(id).await },
+                build_keys,
+                None,
+            )
+            .await
     }
 
     async fn get_by_public_id(&self, public_id: &str) -> Result<User, EntityError> {
         let key = build_public_id_key(public_id);
-        self.cache.get_cached(key, || async {
-            self.source.get_by_public_id(public_id).await
-        }, build_keys, None).await
+        self.cache
+            .get_cached(
+                key,
+                || async { self.source.get_by_public_id(public_id).await },
+                build_keys,
+                None,
+            )
+            .await
     }
 }
 
@@ -78,7 +93,7 @@ fn build_keys(user: &User) -> Vec<String> {
     vec![
         build_id_key(user.id),
         build_public_id_key(&user.public_id),
-        build_name_key(&user.name)
+        build_name_key(&user.name),
     ]
 }
 

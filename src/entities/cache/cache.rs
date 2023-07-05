@@ -1,7 +1,7 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
 use dashmap::{mapref::one::Ref, DashMap};
-use log::info;
+use log::{info, debug};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
@@ -55,24 +55,26 @@ impl Cache {
         decode_and_unwrap(encoded)
     }
 
-    pub async fn get_cached<T, Fut, F>(
+    // TODO: expand key builder to allow for tags/collections
+    pub async fn get_cached<T, Fut, F, FKey>(
         &self,
         key: String,
         get_source: F,
-        keys_builder: fn(&T) -> Vec<String>,
+        keys_builder: FKey,
         expiry: Option<Duration>,
     ) -> Result<T, EntityError>
     where
         for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
         Fut: Future<Output = Result<T, EntityError>> + Sized,
         F: FnOnce() -> Fut,
+        FKey: FnOnce(&T) -> Vec<String>,
     {
         info!("Getting: {}", key);
         match self.get(key.to_owned()) {
             Some(value) => {
                 info!("Got from cache: {:?}", value);
                 Ok(value)
-            },
+            }
             None => {
                 info!("Not found in cache: {}", key);
                 let source_value = get_source().await?;
@@ -191,9 +193,8 @@ fn do_decode_and_unwrap<T>(encoded: &Vec<u8>) -> Option<T>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
-    info!("Got encoded value: {:?}", encoded);
     let wrapped: CacheValue<T> = bincode::deserialize(&encoded[..]).unwrap();
-    info!("Got decoded value: {:?}", wrapped);
+    debug!("Got decoded value: {:?}", wrapped);
     match wrapped.expiry {
         Some(expiry) => {
             info!("Got expiry: {:?}", expiry);
@@ -206,8 +207,7 @@ where
             }
         }
         None => {
-            info!("No expiration set");
             Some(wrapped.value)
-        },
+        }
     }
 }

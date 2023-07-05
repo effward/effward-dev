@@ -1,12 +1,12 @@
 use actix_web::web::Data;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc, DateTime};
 use serde::Serialize;
 use sqlx::MySqlPool;
 use std::cmp;
 use substring::Substring;
 
 use crate::entities::{
-    comment, content, post::PostEntity, user::UserStore, EntityError, EntityStores,
+    comment, content, post::Post, user::UserStore, EntityError, EntityStores,
 };
 
 use super::{utils, UserModel};
@@ -18,7 +18,7 @@ pub struct PostSummary {
     pub id: String,
     pub author: UserModel,
     pub title: String,
-    pub created: NaiveDateTime,
+    pub created: DateTime<Utc>,
     pub created_pretty: String,
     pub link: Option<String>,
     pub content: Option<String>,
@@ -28,14 +28,14 @@ pub struct PostSummary {
 
 pub async fn translate_post_summary(
     pool: &MySqlPool,
-    post_entity: &PostEntity,
+    post: &Post,
     stores: &EntityStores,
 ) -> Result<PostSummary, EntityError> {
-    let author_entity = stores.user_store.get_by_id(post_entity.author_id).await?;
+    let author_entity = stores.user_store.get_by_id(post.author_id).await?;
     let author = UserModel::from(author_entity);
 
     let mut post_preview: Option<String> = None;
-    let content = match post_entity.content_id {
+    let content = match post.content_id {
         Some(id) => {
             let content = content::get_by_id(pool, id).await?;
             let preview_length = cmp::min(content.body.len(), POST_PREVIEW_LENGTH);
@@ -50,15 +50,15 @@ pub async fn translate_post_summary(
         None => None,
     };
 
-    let comment_count = comment::get_count_by_post_id(pool, &post_entity.id).await?;
+    let comment_count = comment::get_count_by_post_id(pool, &post.id).await?;
 
     Ok(PostSummary {
-        id: utils::get_readable_public_id(&post_entity.public_id),
+        id: post.public_id.clone(),
         author,
-        title: post_entity.title.to_owned(),
-        created: post_entity.created,
-        created_pretty: utils::format_relative_timespan(post_entity.created),
-        link: post_entity.link.to_owned(),
+        title: post.title.to_owned(),
+        created: post.created,
+        created_pretty: utils::get_readable_duration(post.created),
+        link: post.link.to_owned(),
         content,
         post_preview,
         comment_count,

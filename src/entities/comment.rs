@@ -99,7 +99,7 @@ WHERE post_id = ?
 
 pub async fn get_by_post_id_parent_id(
     pool: &MySqlPool,
-    post_id: &u64,
+    post_id: u64,
     parent_id: Option<u64>,
     start_index: Option<u64>,
     count: u8,

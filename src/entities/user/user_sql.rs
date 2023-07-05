@@ -37,7 +37,7 @@ struct UserEntity {
 
 impl From<UserEntity> for User {
     fn from(user_entity: UserEntity) -> Self {
-        User {
+        Self {
             id: user_entity.id,
             public_id: utils::get_readable_public_id(user_entity.public_id),
             name: user_entity.name,

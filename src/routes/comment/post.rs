@@ -4,7 +4,7 @@ use shortguid::ShortGuid;
 use sqlx::MySqlPool;
 
 use crate::{
-    entities::{comment, post, EntityStores},
+    entities::{comment, post::{PostStore}, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context, UserContextError},
         utils,
@@ -26,17 +26,10 @@ pub async fn process_comment(
 ) -> impl Responder {
     match user_context::get_auth_user_entity(session, &stores).await {
         Ok(auth_user_entity) => {
-            let post_entity = match ShortGuid::try_parse(&data.post_id) {
-                Ok(post_public_id) => {
-                    match post::get_by_public_id(&pool, *post_public_id.as_uuid()).await {
-                        Ok(p) => p,
-                        Err(entity_error) => {
-                            return utils::redirect_entity_error(entity_error, "post");
-                        }
-                    }
-                }
-                Err(_) => {
-                    return utils::error_redirect("/error/404", "invalid post uuid");
+            let post = match stores.post_store.get_by_public_id(&data.post_id).await {
+                Ok(p) => p,
+                Err(entity_error) => {
+                    return utils::redirect_entity_error(entity_error, "post");
                 }
             };
 
@@ -63,7 +56,7 @@ pub async fn process_comment(
             match comment::insert(
                 &pool,
                 &auth_user_entity.id,
-                &post_entity.id,
+                &post.id,
                 &parent_id,
                 &data.content,
             )

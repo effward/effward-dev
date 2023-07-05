@@ -1,7 +1,7 @@
 use serde::Serialize;
 use sqlx::MySqlPool;
 
-use crate::entities::{comment, post::PostEntity, EntityError, EntityStores};
+use crate::entities::{comment, post::Post, EntityError, EntityStores};
 
 use super::{
     comment::{translate_comment, MAX_CHILD_COMMENTS},
@@ -9,20 +9,20 @@ use super::{
 };
 
 #[derive(Serialize)]
-pub struct Post {
+pub struct PostModel {
     pub summary: PostSummary,
     pub comments: Vec<Comment>,
 }
 
 pub async fn translate_post(
     pool: &MySqlPool,
-    post_entity: &PostEntity,
+    post: &Post,
     stores: &EntityStores,
-) -> Result<Post, EntityError> {
-    let summary = translate_post_summary(pool, post_entity, stores).await?;
+) -> Result<PostModel, EntityError> {
+    let summary = translate_post_summary(pool, post, stores).await?;
 
     let comment_entities =
-        comment::get_by_post_id_parent_id(pool, &post_entity.id, None, None, MAX_CHILD_COMMENTS)
+        comment::get_by_post_id_parent_id(pool, post.id, None, None, MAX_CHILD_COMMENTS)
             .await?;
 
     let mut comments: Vec<Comment> = vec![];
@@ -31,5 +31,5 @@ pub async fn translate_post(
         comments.push(comment);
     }
 
-    Ok(Post { summary, comments })
+    Ok(PostModel { summary, comments })
 }

@@ -40,7 +40,7 @@ pub async fn translate_comment(
 
     let children_entities = comment::get_by_post_id_parent_id(
         pool,
-        &comment_entity.post_id,
+        comment_entity.post_id,
         Some(comment_entity.id),
         None,
         MAX_CHILD_COMMENTS,

@@ -39,7 +39,11 @@ pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpRespo
                 "/error/404",
                 &format!("{} not found in database", entity_type),
             )
-        }
+        },
+        EntityError::InvalidInput("public_id", _) => {
+            FlashMessage::debug(entity_type).send();
+            error_redirect("/error/404", "invalid uuid")
+        },
         _ => {
             error!("🔥 Entity Error: {:?}", error);
             redirect("/error/generic")

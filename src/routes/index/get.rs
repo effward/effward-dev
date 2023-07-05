@@ -4,11 +4,10 @@ use log::{debug, error};
 use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::entities::user::UserStore;
 use crate::entities::EntityStores;
 use crate::routes::user_context::{session_state::TypedSession, user_context};
 use crate::{
-    entities::{self, post::PostEntity},
+    entities::post::{Post, PostStore},
     routes::models::{self, PostSummary},
 };
 
@@ -26,14 +25,14 @@ pub async fn index(
         user_context::build(session, flash_messages, &stores, "home", None).await;
 
     debug!("getting recent posts");
-    let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
+    let result = stores.post_store.get_recent(None, POSTS_PER_PAGE).await;
 
     let post_entities = match result {
         Ok(p) => p,
         Err(e) => {
             error!("Error fetching recent posts: {:?}", e);
             FlashMessage::error("error fetching recent posts, try again in a few").send();
-            Vec::<PostEntity>::new()
+            Vec::<Post>::new()
         }
     };
 

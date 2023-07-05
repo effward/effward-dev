@@ -5,7 +5,7 @@ use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::{
-    entities::{post, user::UserStore, EntityStores},
+    entities::{post::{PostStore}, EntityStores},
     routes::{
         models,
         user_context::{session_state::TypedSession, user_context},
@@ -25,19 +25,14 @@ pub async fn post(
 ) -> impl Responder {
     // TODO: handle errors
     let path_post = path.into_inner();
-    let post_entity = match ShortGuid::try_parse(&path_post) {
-        Ok(post_id) => match post::get_by_public_id(&pool, *post_id.as_uuid()).await {
-            Ok(p) => p,
-            Err(entity_error) => {
-                return utils::redirect_entity_error(entity_error, "post");
-            }
-        },
-        Err(_) => {
-            return utils::error_redirect("/error/404", "invalid post uuid");
+    let post = match stores.post_store.get_by_public_id(&path_post).await {
+        Ok(p) => p,
+        Err(entity_error) => {
+            return utils::redirect_entity_error(entity_error, "post");
         }
     };
 
-    let post = models::translate_post(&pool, &post_entity, &stores)
+    let post_model = models::translate_post(&pool, &post, &stores)
         .await
         .unwrap();
 
@@ -45,12 +40,12 @@ pub async fn post(
         session,
         flash_messages,
         &stores,
-        &format!("post - {}", post.summary.title),
+        &format!("post - {}", post_model.summary.title),
         Some(HERO_BG_CLASS),
     )
     .await;
 
-    user_context.context.insert("post", &post);
+    user_context.context.insert("post", &post_model);
 
     // TODO: handle error
     let rendered = tera.render("post.html", &user_context.context).unwrap();
