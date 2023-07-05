@@ -1,11 +1,13 @@
 use async_trait::async_trait;
-use chrono::{NaiveDateTime, Utc, TimeZone};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use crate::entities::{EntityError, entity_stores::CachedSqlContentStore, utils, content::ContentStore};
+use crate::entities::{
+    content::ContentStore, entity_stores::CachedSqlContentStore, utils, EntityError,
+};
 
-use super::{Comment, comment_store::CommentStore};
+use super::{comment_store::CommentStore, Comment};
 
 const MIN_COMMENT_LENGTH: usize = 5;
 const MAX_COMMENT_LENGTH: usize = 100_000;
@@ -13,12 +15,15 @@ const MAX_COMMENT_LENGTH: usize = 100_000;
 #[derive(Clone)]
 pub struct SqlCommentStore {
     pool: MySqlPool,
-    content_store: CachedSqlContentStore
+    content_store: CachedSqlContentStore,
 }
 
 impl SqlCommentStore {
     pub fn new(pool: MySqlPool, content_store: CachedSqlContentStore) -> Self {
-        Self { pool, content_store }
+        Self {
+            pool,
+            content_store,
+        }
     }
 }
 
@@ -57,9 +62,17 @@ impl CommentStore for SqlCommentStore {
         post_id: &u64,
         parent_id: &Option<u64>,
         content: &str,
-        ) -> Result<Comment, EntityError> {
-        let comment_id = insert(&self.pool, &self.content_store, author_id, post_id, parent_id, content).await?;
-        
+    ) -> Result<Comment, EntityError> {
+        let comment_id = insert(
+            &self.pool,
+            &self.content_store,
+            author_id,
+            post_id,
+            parent_id,
+            content,
+        )
+        .await?;
+
         Ok(self.get_by_id(comment_id).await?)
     }
 
@@ -69,28 +82,32 @@ impl CommentStore for SqlCommentStore {
 
     async fn get_by_public_id(&self, public_id: &str) -> Result<Comment, EntityError> {
         let public_id = utils::parse_public_id(public_id)?;
-        
-        Ok(Comment::from(get_by_public_id(&self.pool, public_id).await?))
+
+        Ok(Comment::from(
+            get_by_public_id(&self.pool, public_id).await?,
+        ))
     }
 
     async fn get_count_by_post_id(&self, post_id: &u64) -> Result<i64, EntityError> {
         Ok(get_count_by_post_id(&self.pool, post_id).await?)
     }
 
-    async fn get_by_post_id_parent_id(&self,
+    async fn get_by_post_id_parent_id(
+        &self,
         post_id: u64,
         parent_id: Option<u64>,
         start_index: Option<u64>,
         count: u8,
-        ) -> Result<Vec<Comment>, EntityError> {
-        let comments = get_by_post_id_parent_id(&self.pool, post_id, parent_id, start_index, count).await?;
-        
+    ) -> Result<Vec<Comment>, EntityError> {
+        let comments =
+            get_by_post_id_parent_id(&self.pool, post_id, parent_id, start_index, count).await?;
+
         let mut result: Vec<Comment> = vec![];
-        
+
         for comment in comments {
             result.push(Comment::from(comment));
         }
-        
+
         Ok(result)
     }
 }
@@ -102,7 +119,7 @@ async fn insert(
     post_id: &u64,
     parent_id: &Option<u64>,
     content: &str,
-    ) -> Result<u64, EntityError> {
+) -> Result<u64, EntityError> {
     // TODO: verify if author is a valid user?
 
     if content.len() < MIN_COMMENT_LENGTH {
@@ -112,7 +129,10 @@ async fn insert(
         ));
     }
     if content.len() > MAX_COMMENT_LENGTH {
-        return Err(EntityError::InvalidInput("content", "comment's content is too long"));
+        return Err(EntityError::InvalidInput(
+            "content",
+            "comment's content is too long",
+        ));
     }
 
     let content_id = content_store.get_or_create(content).await?;
@@ -145,19 +165,18 @@ VALUES
 async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<CommentEntity, EntityError> {
     Ok(sqlx::query_as!(
         CommentEntity,
-    r#"
+        r#"
 SELECT *
 FROM comments
 WHERE id = ?
     "#,
-    id
-    ).fetch_one(pool).await?)
+        id
+    )
+    .fetch_one(pool)
+    .await?)
 }
 
-async fn get_by_public_id(
-    pool: &MySqlPool,
-    public_id: Uuid,
-    ) -> Result<CommentEntity, EntityError> {
+async fn get_by_public_id(pool: &MySqlPool, public_id: Uuid) -> Result<CommentEntity, EntityError> {
     let public_id_bytes = public_id.into_bytes();
     let comment_entity = sqlx::query_as!(
         CommentEntity,
@@ -196,7 +215,7 @@ async fn get_by_post_id_parent_id(
     parent_id: Option<u64>,
     start_index: Option<u64>,
     count: u8,
-    ) -> Result<Vec<CommentEntity>, EntityError> {
+) -> Result<Vec<CommentEntity>, EntityError> {
     let comment_entities = match parent_id {
         Some(parent_id) => match start_index {
             Some(start_index) => {

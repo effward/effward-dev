@@ -9,7 +9,7 @@ use sha2::Sha256;
 use sqlx::MySqlPool;
 use uuid::Uuid;
 
-use crate::entities::{email, utils, EntityError};
+use crate::entities::{email::EmailStore, entity_stores::CachedSqlEmailStore, utils, EntityError};
 
 use super::{User, UserStore};
 
@@ -21,11 +21,12 @@ pub const MAX_PASSWORD_LENGTH: usize = 256;
 #[derive(Clone)]
 pub struct SqlUserStore {
     pool: MySqlPool,
+    email_store: CachedSqlEmailStore,
 }
 
 impl SqlUserStore {
-    pub fn new(pool: MySqlPool) -> Self {
-        Self { pool }
+    pub fn new(pool: MySqlPool, email_store: CachedSqlEmailStore) -> Self {
+        Self { pool, email_store }
     }
 }
 
@@ -63,7 +64,7 @@ impl UserStore for SqlUserStore {
         email: &str,
         password: &Secret<String>,
     ) -> Result<User, EntityError> {
-        let user_id = insert(&self.pool, name, email, password).await?;
+        let user_id = insert(&self.pool, &self.email_store, name, email, password).await?;
 
         Ok(self.get_by_id(user_id).await?)
     }
@@ -95,6 +96,7 @@ impl UserStore for SqlUserStore {
 
 async fn insert(
     pool: &MySqlPool,
+    email_store: &CachedSqlEmailStore,
     name: &str,
     email: &str,
     password: &Secret<String>,
@@ -112,7 +114,7 @@ async fn insert(
         ));
     }
 
-    let email_id = email::get_or_create_id(pool, email).await?;
+    let email = email_store.get_or_create(email).await?;
 
     let public_id = Uuid::new_v4().into_bytes();
 
@@ -129,7 +131,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
         &public_id[..],
         sanitize_name(name)?,
-        email_id,
+        email.id,
         password,
         0,
         created,

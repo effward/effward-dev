@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc, Duration, NaiveDateTime};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use shortguid::ShortGuid;
 use uuid::Uuid;
 

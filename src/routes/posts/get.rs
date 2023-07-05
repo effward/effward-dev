@@ -4,7 +4,10 @@ use log::error;
 use tera::Tera;
 
 use crate::{
-    entities::{post::{Post, PostStore}, EntityStores},
+    entities::{
+        post::{Post, PostStore},
+        EntityStores,
+    },
     routes::{
         models::{self, PostSummary},
         user_context::{session_state::TypedSession, user_context},

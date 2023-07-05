@@ -4,26 +4,34 @@ use sqlx::MySqlPool;
 
 use super::{
     cache::Cache,
-    user::{CachedUserStore, SqlUserStore}, post::{SqlPostStore, CachedPostStore}, content::{CachedContentStore, SqlContentStore}, comment::{CachedCommentStore, SqlCommentStore},
+    comment::{CachedCommentStore, SqlCommentStore},
+    content::{CachedContentStore, SqlContentStore},
+    email::{CachedEmailStore, SqlEmailStore},
+    post::{CachedPostStore, SqlPostStore},
+    user::{CachedUserStore, SqlUserStore},
 };
 
 pub type CachedSqlCommentStore = Arc<CachedCommentStore<SqlCommentStore>>;
 pub type CachedSqlContentStore = Arc<CachedContentStore<SqlContentStore>>;
+pub type CachedSqlEmailStore = Arc<CachedEmailStore<SqlEmailStore>>;
 pub type CachedSqlPostStore = Arc<CachedPostStore<SqlPostStore>>;
 pub type CachedSqlUserStore = Arc<CachedUserStore<SqlUserStore>>;
-
 
 #[derive(Clone)]
 pub struct EntityStores {
     pub comment_store: CachedSqlCommentStore,
     pub content_store: CachedSqlContentStore,
+    pub email_store: CachedSqlEmailStore,
     pub post_store: CachedSqlPostStore,
     pub user_store: CachedSqlUserStore,
 }
 
 impl EntityStores {
     pub fn new(pool: MySqlPool) -> Self {
-        let user_source = SqlUserStore::new(pool.clone());
+        let email_source = SqlEmailStore::new(pool.clone());
+        let email_store = Arc::new(CachedEmailStore::new(Cache::new(), email_source));
+
+        let user_source = SqlUserStore::new(pool.clone(), email_store.clone());
         let user_store = Arc::new(CachedUserStore::new(Cache::new(), user_source));
 
         let content_source = SqlContentStore::new(pool.clone());
@@ -38,6 +46,7 @@ impl EntityStores {
         Self {
             comment_store,
             content_store,
+            email_store,
             post_store,
             user_store,
         }

@@ -5,7 +5,9 @@ use sqlx::MySqlPool;
 use url::Url;
 use uuid::Uuid;
 
-use crate::entities::{content::ContentStore, utils, EntityError, entity_stores::CachedSqlContentStore};
+use crate::entities::{
+    content::ContentStore, entity_stores::CachedSqlContentStore, utils, EntityError,
+};
 
 use super::{Post, PostStore};
 
@@ -15,12 +17,15 @@ pub const MAX_TITLE_LENGTH: usize = 400;
 #[derive(Clone)]
 pub struct SqlPostStore {
     pool: MySqlPool,
-    content_store: CachedSqlContentStore
+    content_store: CachedSqlContentStore,
 }
 
 impl SqlPostStore {
     pub fn new(pool: MySqlPool, content_store: CachedSqlContentStore) -> Self {
-        Self { pool, content_store }
+        Self {
+            pool,
+            content_store,
+        }
     }
 }
 
@@ -60,7 +65,15 @@ impl PostStore for SqlPostStore {
         link: &Option<String>,
         content: &Option<String>,
     ) -> Result<Post, EntityError> {
-        let post_id = insert(&self.pool, &self.content_store, author_id, title, link, content).await?;
+        let post_id = insert(
+            &self.pool,
+            &self.content_store,
+            author_id,
+            title,
+            link,
+            content,
+        )
+        .await?;
 
         Ok(self.get_by_id(post_id).await?)
     }
@@ -114,7 +127,7 @@ async fn insert(
         Some(c) => {
             let content = content_store.get_or_create(c).await?;
             Some(content.id)
-        },
+        }
         None => None,
     };
 

@@ -1,10 +1,14 @@
-use chrono::{Utc, DateTime};
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use std::cmp;
 use substring::Substring;
 
 use crate::entities::{
-    comment::{self, CommentStore}, content::ContentStore, post::Post, user::UserStore, EntityError, EntityStores,
+    comment::{self, CommentStore},
+    content::ContentStore,
+    post::Post,
+    user::UserStore,
+    EntityError, EntityStores,
 };
 
 use super::{utils, UserModel};

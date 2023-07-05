@@ -28,20 +28,15 @@ pub async fn process_submission(
     stores: Data<EntityStores>,
 ) -> impl Responder {
     match user_context::get_auth_user_entity(session, &stores).await {
-        Ok(auth_user_entity) => match stores.post_store.insert(
-            &auth_user_entity.id,
-            &data.title,
-            &data.link,
-            &data.content,
-        )
-        .await
+        Ok(auth_user_entity) => match stores
+            .post_store
+            .insert(&auth_user_entity.id, &data.title, &data.link, &data.content)
+            .await
         {
-            Ok(post) => {
-                utils::success_redirect(
-                    &format!("/post/{}", post.public_id),
-                    "new post successfully submitted, it should appear momentarily...",
-                )
-            }
+            Ok(post) => utils::success_redirect(
+                &format!("/post/{}", post.public_id),
+                "new post successfully submitted, it should appear momentarily...",
+            ),
             Err(entity_error) => {
                 error!("Entity Error creating post: {:?}", entity_error);
 

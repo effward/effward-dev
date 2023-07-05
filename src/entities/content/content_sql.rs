@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use chrono::{NaiveDateTime, Utc, TimeZone};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use sqlx::MySqlPool;
 
-use crate::entities::{EntityError, utils};
+use crate::entities::{utils, EntityError};
 
 use super::{Content, ContentStore};
 
@@ -41,10 +41,7 @@ impl From<ContentEntity> for Content {
 
 #[async_trait]
 impl ContentStore for SqlContentStore {
-    async fn insert(
-        &self,
-        body: &str,
-        ) -> Result<Content, EntityError> {
+    async fn insert(&self, body: &str) -> Result<Content, EntityError> {
         Ok(Content::from(insert(&self.pool, body).await?))
     }
 
@@ -55,7 +52,7 @@ impl ContentStore for SqlContentStore {
     async fn get_by_id(&self, id: u64) -> Result<Content, EntityError> {
         Ok(Content::from(get_by_id(&self.pool, id).await?))
     }
-    
+
     async fn get_by_body(&self, body: &str) -> Result<Content, EntityError> {
         Ok(Content::from(get_by_body(&self.pool, body).await?))
     }
@@ -88,10 +85,7 @@ WHERE id = ?
     .await?)
 }
 
-async fn get_by_body(
-    pool: &MySqlPool,
-    body: &str,
-    ) -> Result<ContentEntity, EntityError> {
+async fn get_by_body(pool: &MySqlPool, body: &str) -> Result<ContentEntity, EntityError> {
     let body_hash = hash_body(body)?;
     try_get_by_body_hash(pool, body, &body_hash).await
 }
@@ -100,7 +94,7 @@ async fn insert_by_body_hash(
     pool: &MySqlPool,
     body: &str,
     body_hash: &Vec<u8>,
-    ) -> Result<ContentEntity, EntityError> {
+) -> Result<ContentEntity, EntityError> {
     let created = Utc::now().naive_utc();
     let content_id = sqlx::query!(
         r#"
@@ -115,14 +109,19 @@ VALUES (?, ?, ?)
     .await?
     .last_insert_id();
 
-    Ok(ContentEntity { id: content_id, body: body.to_owned(), body_hash: body_hash.clone(), created })
+    Ok(ContentEntity {
+        id: content_id,
+        body: body.to_owned(),
+        body_hash: body_hash.clone(),
+        created,
+    })
 }
 
 async fn try_get_by_body_hash(
     pool: &MySqlPool,
     body: &str,
     body_hash: &Vec<u8>,
-    ) -> Result<ContentEntity, EntityError> {
+) -> Result<ContentEntity, EntityError> {
     Ok(sqlx::query_as!(
         ContentEntity,
         r#"

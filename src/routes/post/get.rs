@@ -3,7 +3,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 use tera::Tera;
 
 use crate::{
-    entities::{post::{PostStore}, EntityStores},
+    entities::{post::PostStore, EntityStores},
     routes::{
         models,
         user_context::{session_state::TypedSession, user_context},
@@ -29,9 +29,7 @@ pub async fn post(
         }
     };
 
-    let post_model = models::translate_post(&post, &stores)
-        .await
-        .unwrap();
+    let post_model = models::translate_post(&post, &stores).await.unwrap();
 
     let mut user_context = user_context::build(
         session,

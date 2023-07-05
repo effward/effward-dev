@@ -30,19 +30,13 @@ pub async fn translate_comment(
     comment: &Comment,
     depth: usize,
 ) -> Result<CommentModel, EntityError> {
-    let author_entity = stores
-        .user_store
-        .get_by_id(comment.author_id)
-        .await?;
+    let author_entity = stores.user_store.get_by_id(comment.author_id).await?;
     let author = UserModel::from(author_entity);
 
-    let children_entities = stores.comment_store.get_by_post_id_parent_id(
-        comment.post_id,
-        Some(comment.id),
-        None,
-        MAX_CHILD_COMMENTS,
-    )
-    .await?;
+    let children_entities = stores
+        .comment_store
+        .get_by_post_id_parent_id(comment.post_id, Some(comment.id), None, MAX_CHILD_COMMENTS)
+        .await?;
     let mut children: Vec<CommentModel> = vec![];
 
     if depth < MAX_DEPTH {

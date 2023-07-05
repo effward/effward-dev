@@ -1,7 +1,7 @@
 use bincode;
 use chrono::{DateTime, Duration, Utc};
 use dashmap::{mapref::one::Ref, DashMap};
-use log::{info, debug};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 
@@ -206,8 +206,6 @@ where
                 None
             }
         }
-        None => {
-            Some(wrapped.value)
-        }
+        None => Some(wrapped.value),
     }
 }

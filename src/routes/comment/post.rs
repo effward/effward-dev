@@ -4,7 +4,11 @@ use shortguid::ShortGuid;
 use sqlx::MySqlPool;
 
 use crate::{
-    entities::{comment::{self, CommentStore}, post::{PostStore}, EntityStores},
+    entities::{
+        comment::{self, CommentStore},
+        post::PostStore,
+        EntityStores,
+    },
     routes::{
         user_context::{session_state::TypedSession, user_context, UserContextError},
         utils,
@@ -37,22 +41,16 @@ pub async fn process_comment(
                 Some(parent_id) => match stores.comment_store.get_by_public_id(&parent_id).await {
                     Ok(p) => Some(p.id),
                     Err(entity_error) => {
-                        return utils::redirect_entity_error(
-                            entity_error,
-                            "parent comment",
-                        );
+                        return utils::redirect_entity_error(entity_error, "parent comment");
                     }
                 },
                 None => None,
             };
 
-            match stores.comment_store.insert(
-                &auth_user_entity.id,
-                &post.id,
-                &parent_id,
-                &data.content,
-            )
-            .await
+            match stores
+                .comment_store
+                .insert(&auth_user_entity.id, &post.id, &parent_id, &data.content)
+                .await
             {
                 Ok(_) => utils::success_redirect(
                     &format!("/post/{}", data.post_id),
