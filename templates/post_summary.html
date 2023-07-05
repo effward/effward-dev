@@ -18,7 +18,7 @@
       
       <nav class="level is-mobile mt-0 my-1">
         <div class="level-left">
-          <p class="level-item is-small" aria-label="{{ post.created }}">
+          <p class="level-item is-small" aria-label="{{ post.created }}" style="font-size: 0.75em">
             <span class="icon is-small mr-2">
               <i class="fas fa-calendar" aria-hidden="true"></i>
             </span>
@@ -26,7 +26,7 @@
           </p>
         </div>
         <div class="level-right">
-            <a href="/user/{{ post.author.id }}" class="level-item is-small" aria-label="{{ post.author.name }}">
+            <a href="/user/{{ post.author.id }}" class="level-item is-small" aria-label="{{ post.author.name }}" style="font-size: 0.75em">
             {{ post.author.name }}
             <span class="icon is-small ml-2">
               <i class="fas fa-user" aria-hidden="true"></i>
@@ -36,7 +36,7 @@
       </nav>
       <nav class="level is-mobile">
         <div class="level-left">
-          <a href="/post/{{ post.id }}" class="level-item is-small" aria-label="view comments">
+          <a href="/post/{{ post.id }}" class="level-item is-small" aria-label="view comments" style="font-size: 0.75em">
             <span class="icon is-small mr-2">
               <i class="fas fa-comment-dots" aria-hidden="true"></i>
             </span>
