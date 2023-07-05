@@ -10,9 +10,11 @@ pub enum EntityError {
     NotFound,
     #[error("duplicate key")]
     DuplicateKey,
+    #[error("caching error")]
+    CachingError(String),
 }
 
-impl std::convert::From<sqlx::Error> for EntityError {
+impl From<sqlx::Error> for EntityError {
     fn from(err: sqlx::Error) -> Self {
         match err {
             sqlx::Error::RowNotFound => EntityError::NotFound,

@@ -1,27 +1,12 @@
-use chrono::{NaiveDateTime, Utc};
-use shortguid::ShortGuid;
-use uuid::Uuid;
+use chrono::{DateTime, Duration, Utc};
 
-pub fn get_readable_public_id(uuid_vec: &Vec<u8>) -> String {
-    let mut bytes: [u8; 16] = [0; 16];
-    let mut i = 0;
-    for byte in uuid_vec {
-        bytes[i] = *byte;
-        i += 1;
+pub fn get_readable_duration(datetime: DateTime<Utc>) -> String {
+    let difference = Utc::now() - datetime;
 
-        if i >= 16 {
-            break;
-        }
-    }
-
-    let public_uuid = Uuid::from_bytes(bytes);
-    ShortGuid::from(public_uuid).to_string()
+    readable_duration(difference)
 }
 
-pub fn format_relative_timespan(datetime: NaiveDateTime) -> String {
-    let now = Utc::now().naive_utc();
-    let difference = now - datetime;
-
+fn readable_duration(difference: Duration) -> String {
     let minutes = difference.num_minutes();
     if minutes < 60 {
         return format!("{} minutes", minutes);

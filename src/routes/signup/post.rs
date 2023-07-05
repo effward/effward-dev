@@ -2,15 +2,14 @@ use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::FlashMessage;
 use secrecy::Secret;
 use serde::Deserialize;
-use sqlx::MySqlPool;
 
 use crate::{
     entities::{
         user::{
-            self, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
+            UserStore, MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH,
             MIN_USERNAME_LENGTH,
         },
-        EntityError,
+        EntityError, EntityStores,
     },
     routes::{
         login::post::do_login_and_redirect, user_context::session_state::TypedSession, utils,
@@ -26,15 +25,18 @@ pub struct SignupRequest {
 
 pub async fn process_signup(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
     data: web::Form<SignupRequest>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
-    let result = user::insert(&pool, &data.username, &data.email, &data.password).await;
+    let result = stores
+        .user_store
+        .insert(&data.username, &data.email, &data.password)
+        .await;
 
     match result {
         Ok(_) => {
             FlashMessage::success("successfully signed up").send();
-            do_login_and_redirect(session, pool, &data.username, &data.password).await
+            do_login_and_redirect(session, &stores, &data.username, &data.password).await
         }
         Err(entity_error) => signup_error_redirect(entity_error),
     }
@@ -61,6 +63,7 @@ fn signup_error_redirect(entity_error: EntityError) -> HttpResponse {
         EntityError::MalformedData => SignupErrorCode::Unknown,
         EntityError::NotFound => SignupErrorCode::Unknown,
         EntityError::DuplicateKey => SignupErrorCode::UserAlreadyExists,
+        EntityError::CachingError(_) => return utils::redirect_entity_error(entity_error, "user"),
     };
 
     let error_message = get_error_message(error_code);

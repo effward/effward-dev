@@ -1,10 +1,8 @@
 use actix_web::{web, Responder};
 use serde::Deserialize;
-use shortguid::ShortGuid;
-use sqlx::MySqlPool;
 
 use crate::{
-    entities::{comment, post},
+    entities::{comment::CommentStore, post::PostStore, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context, UserContextError},
         utils,
@@ -20,57 +18,36 @@ pub struct CommentRequest {
 
 pub async fn process_comment(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
     data: web::Form<CommentRequest>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
-    match user_context::get_auth_user_entity(session, &pool).await {
+    match user_context::get_auth_user_entity(session, &stores).await {
         Ok(auth_user_entity) => {
-            let post_entity = match ShortGuid::try_parse(&data.post_id) {
-                Ok(post_public_id) => {
-                    match post::get_by_public_id(&pool, *post_public_id.as_uuid()).await {
-                        Ok(p) => p,
-                        Err(entity_error) => {
-                            return utils::redirect_entity_error(entity_error, "post");
-                        }
-                    }
-                }
-                Err(_) => {
-                    return utils::error_redirect("/error/404", "invalid post uuid");
+            let post = match stores.post_store.get_by_public_id(&data.post_id).await {
+                Ok(p) => p,
+                Err(entity_error) => {
+                    return utils::redirect_entity_error(entity_error, "post");
                 }
             };
 
             let parent_id = match data.parent_id.to_owned() {
-                Some(parent_id) => match ShortGuid::try_parse(parent_id) {
-                    Ok(parent_public_id) => {
-                        match comment::get_by_public_id(&pool, *parent_public_id.as_uuid()).await {
-                            Ok(p) => Some(p.id),
-                            Err(entity_error) => {
-                                return utils::redirect_entity_error(
-                                    entity_error,
-                                    "parent comment",
-                                );
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        return utils::error_redirect("/error/404", "invalid parent comment uuid");
+                Some(parent_id) => match stores.comment_store.get_by_public_id(&parent_id).await {
+                    Ok(p) => Some(p.id),
+                    Err(entity_error) => {
+                        return utils::redirect_entity_error(entity_error, "parent comment");
                     }
                 },
                 None => None,
             };
 
-            match comment::insert(
-                &pool,
-                &auth_user_entity.id,
-                &post_entity.id,
-                &parent_id,
-                &data.content,
-            )
-            .await
+            match stores
+                .comment_store
+                .insert(&auth_user_entity.id, &post.id, &parent_id, &data.content)
+                .await
             {
                 Ok(_) => utils::success_redirect(
                     &format!("/post/{}", data.post_id),
-                    "new comment successfully submitted",
+                    "new comment successfully submitted, it should appear momentarily...",
                 ),
                 Err(_) => utils::warning_redirect(
                     &format!("/post/{}", data.post_id),

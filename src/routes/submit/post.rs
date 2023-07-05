@@ -1,10 +1,12 @@
-use actix_web::{web, Responder};
+use actix_web::{
+    web::{Data, Form},
+    Responder,
+};
 use log::error;
 use serde::Deserialize;
-use sqlx::MySqlPool;
 
 use crate::{
-    entities::post,
+    entities::{post::PostStore, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context},
         utils,
@@ -20,23 +22,19 @@ pub struct SubmitRequest {
 
 pub async fn process_submission(
     session: TypedSession,
-    pool: web::Data<MySqlPool>,
-    data: web::Form<SubmitRequest>,
+    data: Form<SubmitRequest>,
+    stores: Data<EntityStores>,
 ) -> impl Responder {
-    match user_context::get_auth_user_entity(session, &pool).await {
-        Ok(auth_user_entity) => match post::insert(
-            &pool,
-            &auth_user_entity.id,
-            &data.title,
-            &data.link,
-            &data.content,
-        )
-        .await
+    match user_context::get_auth_user_entity(session, &stores).await {
+        Ok(auth_user_entity) => match stores
+            .post_store
+            .insert(&auth_user_entity.id, &data.title, &data.link, &data.content)
+            .await
         {
-            Ok(_post_id) => {
-                // TODO: Redirect to post page (after creating post page)
-                utils::success_redirect("/posts", "new post successfully submitted")
-            }
+            Ok(post) => utils::success_redirect(
+                &format!("/post/{}", post.public_id),
+                "new post successfully submitted, it should appear momentarily...",
+            ),
             Err(entity_error) => {
                 error!("Entity Error creating post: {:?}", entity_error);
 

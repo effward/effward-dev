@@ -9,6 +9,8 @@ Code for effward.dev site
 Recommended:
 - [cargo-watch](https://crates.io/crates/cargo-watch)
     - `cargo install cargo-watch`
+- [cargo-machete](https://github.com/bnjbvr/cargo-machete)
+    - `cargo install cargo-machete`
 
 ## Format
 Format code with:

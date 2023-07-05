@@ -1,11 +1,13 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web::Data, HttpResponse, Responder};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
-use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::routes::{
-    user_context::{session_state::TypedSession, user_context},
-    utils,
+use crate::{
+    entities::EntityStores,
+    routes::{
+        user_context::{session_state::TypedSession, user_context},
+        utils,
+    },
 };
 
 const HERO_BG_CLASS: &str = "hero-bg-submit";
@@ -13,13 +15,13 @@ const HERO_BG_CLASS: &str = "hero-bg-submit";
 pub async fn submit(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
-    tera: web::Data<Tera>,
+    stores: Data<EntityStores>,
+    tera: Data<Tera>,
 ) -> impl Responder {
     let user_context = user_context::build(
         session,
         flash_messages,
-        &pool,
+        &stores,
         "submit",
         Some(HERO_BG_CLASS),
     )

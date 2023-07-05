@@ -1,21 +1,23 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlx::MySqlPool;
 use std::cmp;
 use substring::Substring;
 
-use crate::entities::{comment, content, post::PostEntity, user, EntityError};
+use crate::entities::{
+    comment::CommentStore, content::ContentStore, post::Post, user::UserStore, EntityError,
+    EntityStores,
+};
 
-use super::{translate_user, utils, User};
+use super::{utils, UserModel};
 
 const POST_PREVIEW_LENGTH: usize = 250;
 
 #[derive(Serialize)]
 pub struct PostSummary {
     pub id: String,
-    pub author: User,
+    pub author: UserModel,
     pub title: String,
-    pub created: NaiveDateTime,
+    pub created: DateTime<Utc>,
     pub created_pretty: String,
     pub link: Option<String>,
     pub content: Option<String>,
@@ -24,16 +26,16 @@ pub struct PostSummary {
 }
 
 pub async fn translate_post_summary(
-    pool: &MySqlPool,
-    post_entity: &PostEntity,
+    post: &Post,
+    stores: &EntityStores,
 ) -> Result<PostSummary, EntityError> {
-    let author_entity = user::get_by_id(pool, post_entity.author_id).await?;
-    let author = translate_user(author_entity);
+    let author_entity = stores.user_store.get_by_id(post.author_id).await?;
+    let author = UserModel::from(author_entity);
 
     let mut post_preview: Option<String> = None;
-    let content = match post_entity.content_id {
+    let content = match post.content_id {
         Some(id) => {
-            let content = content::get_by_id(pool, id).await?;
+            let content = stores.content_store.get_by_id(id).await?;
             let preview_length = cmp::min(content.body.len(), POST_PREVIEW_LENGTH);
             let mut preview = content.body.substring(0, preview_length).to_owned();
 
@@ -46,15 +48,15 @@ pub async fn translate_post_summary(
         None => None,
     };
 
-    let comment_count = comment::get_count_by_post_id(pool, &post_entity.id).await?;
+    let comment_count = stores.comment_store.get_count_by_post_id(&post.id).await?;
 
     Ok(PostSummary {
-        id: utils::get_readable_public_id(&post_entity.public_id),
+        id: post.public_id.clone(),
         author,
-        title: post_entity.title.to_owned(),
-        created: post_entity.created,
-        created_pretty: utils::format_relative_timespan(post_entity.created),
-        link: post_entity.link.to_owned(),
+        title: post.title.to_owned(),
+        created: post.created,
+        created_pretty: utils::get_readable_duration(post.created),
+        link: post.link.to_owned(),
         content,
         post_preview,
         comment_count,

@@ -16,11 +16,6 @@ pub fn success_redirect(location: &str, success_message: &str) -> HttpResponse {
     redirect(location)
 }
 
-pub fn info_redirect(location: &str, info_message: &str) -> HttpResponse {
-    FlashMessage::info(info_message).send();
-    redirect(location)
-}
-
 pub fn warning_redirect(location: &str, warning_message: &str) -> HttpResponse {
     FlashMessage::warning(warning_message).send();
     redirect(location)
@@ -39,6 +34,10 @@ pub fn redirect_entity_error(error: EntityError, entity_type: &str) -> HttpRespo
                 "/error/404",
                 &format!("{} not found in database", entity_type),
             )
+        }
+        EntityError::InvalidInput("public_id", _) => {
+            FlashMessage::debug(entity_type).send();
+            error_redirect("/error/404", "invalid uuid")
         }
         _ => {
             error!("🔥 Entity Error: {:?}", error);

@@ -3,12 +3,14 @@ use actix_web::{
 };
 use actix_web_flash_messages::IncomingFlashMessages;
 
-use sqlx::MySqlPool;
 use tera::Tera;
 
-use crate::routes::user_context::{
-    session_state::TypedSession,
-    user_context::{self, UserContext},
+use crate::{
+    entities::EntityStores,
+    routes::user_context::{
+        session_state::TypedSession,
+        user_context::{self, UserContext},
+    },
 };
 
 const PAGE_NAME: &str = "error - not found";
@@ -18,14 +20,14 @@ const DEFAULT_MISSING_TYPE: &str = "item";
 pub async fn not_found(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
+    stores: web::Data<EntityStores>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
     // TODO: handle errors
     let mut user_context = user_context::build(
         session,
         flash_messages,
-        &pool,
+        &stores,
         PAGE_NAME,
         Some(HERO_BG_CLASS),
     )

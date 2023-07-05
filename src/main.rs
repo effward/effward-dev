@@ -62,6 +62,8 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    let entity_stores = entities::EntityStores::new(pool.clone());
+
     warn!("🌎 Initializing Tera static templates...");
     let tera = match Tera::new("templates/**/*") {
         Ok(t) => {
@@ -166,6 +168,7 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/static", "public").show_files_listing())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(tera.clone()))
+            .app_data(web::Data::new(entity_stores.clone()))
     })
     .bind(("0.0.0.0", 8080))?
     .run()

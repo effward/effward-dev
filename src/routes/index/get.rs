@@ -1,12 +1,12 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
-use log::error;
-use sqlx::MySqlPool;
+use log::{debug, error};
 use tera::Tera;
 
+use crate::entities::EntityStores;
 use crate::routes::user_context::{session_state::TypedSession, user_context};
 use crate::{
-    entities::{self, post::PostEntity},
+    entities::post::{Post, PostStore},
     routes::models::{self, PostSummary},
 };
 
@@ -15,25 +15,28 @@ const POSTS_PER_PAGE: u8 = 2;
 pub async fn index(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
+    stores: web::Data<EntityStores>,
 ) -> impl Responder {
-    let mut user_context = user_context::build(session, flash_messages, &pool, "home", None).await;
+    debug!("getting user context");
+    let mut user_context =
+        user_context::build(session, flash_messages, &stores, "home", None).await;
 
-    let result = entities::post::get_recent(&pool, None, POSTS_PER_PAGE).await;
+    debug!("getting recent posts");
+    let result = stores.post_store.get_recent(None, POSTS_PER_PAGE).await;
 
     let post_entities = match result {
         Ok(p) => p,
         Err(e) => {
             error!("Error fetching recent posts: {:?}", e);
             FlashMessage::error("error fetching recent posts, try again in a few").send();
-            Vec::<PostEntity>::new()
+            Vec::<Post>::new()
         }
     };
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(&pool, post_entity).await {
+        match models::translate_post_summary(post_entity, &stores).await {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }

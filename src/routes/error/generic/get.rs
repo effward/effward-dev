@@ -2,12 +2,14 @@ use actix_web::{
     dev::ServiceResponse, middleware::ErrorHandlerResponse, web, HttpResponse, Responder, Result,
 };
 use actix_web_flash_messages::IncomingFlashMessages;
-use sqlx::MySqlPool;
 use tera::{Context, Tera};
 
-use crate::routes::{
-    user_context::{session_state::TypedSession, user_context},
-    utils,
+use crate::{
+    entities::EntityStores,
+    routes::{
+        user_context::{session_state::TypedSession, user_context},
+        utils,
+    },
 };
 
 const PAGE_NAME: &str = "error - internal";
@@ -16,13 +18,13 @@ const HERO_BG_CLASS: &str = "hero-bg-500";
 pub async fn generic(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
+    stores: web::Data<EntityStores>,
     tera: web::Data<Tera>,
 ) -> impl Responder {
     let user_context = user_context::build(
         session,
         flash_messages,
-        &pool,
+        &stores,
         PAGE_NAME,
         Some(HERO_BG_CLASS),
     )

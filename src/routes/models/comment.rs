@@ -1,60 +1,57 @@
 use async_recursion::async_recursion;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlx::MySqlPool;
 
 use crate::entities::{
-    comment::{self, CommentEntity},
-    content, user, EntityError,
+    comment::{Comment, CommentStore},
+    content::ContentStore,
+    user::UserStore,
+    EntityError, EntityStores,
 };
 
-use super::{translate_user, utils, User};
+use super::{utils, UserModel};
 
 pub const MAX_CHILD_COMMENTS: u8 = 5;
 const MAX_DEPTH: usize = 5;
 
 #[derive(Serialize)]
-pub struct Comment {
+pub struct CommentModel {
     pub id: String,
-    pub author: User,
-    pub created: NaiveDateTime,
+    pub author: UserModel,
+    pub created: DateTime<Utc>,
     pub created_pretty: String,
     pub content: String,
-    pub children: Vec<Comment>,
+    pub children: Vec<CommentModel>,
 }
 
 #[async_recursion]
 pub async fn translate_comment(
-    pool: &MySqlPool,
-    comment_entity: &CommentEntity,
+    stores: &EntityStores,
+    comment: &Comment,
     depth: usize,
-) -> Result<Comment, EntityError> {
-    let author_entity = user::get_by_id(pool, comment_entity.author_id).await?;
-    let author = translate_user(author_entity);
+) -> Result<CommentModel, EntityError> {
+    let author_entity = stores.user_store.get_by_id(comment.author_id).await?;
+    let author = UserModel::from(author_entity);
 
-    let children_entities = comment::get_by_post_id_parent_id(
-        pool,
-        &comment_entity.post_id,
-        Some(comment_entity.id),
-        None,
-        MAX_CHILD_COMMENTS,
-    )
-    .await?;
-    let mut children: Vec<Comment> = vec![];
+    let children_entities = stores
+        .comment_store
+        .get_by_post_id_parent_id(comment.post_id, Some(comment.id), None, MAX_CHILD_COMMENTS)
+        .await?;
+    let mut children: Vec<CommentModel> = vec![];
 
     if depth < MAX_DEPTH {
         for child_entity in children_entities {
-            let child_comment = translate_comment(pool, &child_entity, depth + 1).await?;
+            let child_comment = translate_comment(stores, &child_entity, depth + 1).await?;
             children.push(child_comment);
         }
     }
 
-    let content = content::get_by_id(pool, comment_entity.content_id).await?;
-    Ok(Comment {
-        id: utils::get_readable_public_id(&comment_entity.public_id),
+    let content = stores.content_store.get_by_id(comment.content_id).await?;
+    Ok(CommentModel {
+        id: comment.public_id.clone(),
         author,
-        created: comment_entity.created,
-        created_pretty: utils::format_relative_timespan(comment_entity.created),
+        created: comment.created,
+        created_pretty: utils::get_readable_duration(comment.created),
         content: content.body,
         children,
     })
