@@ -1,7 +1,6 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
 use log::error;
-use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::{
@@ -18,7 +17,6 @@ const HERO_BG_CLASS: &str = "hero-bg-posts";
 pub async fn posts(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     stores: web::Data<EntityStores>,
 ) -> impl Responder {
@@ -44,7 +42,7 @@ pub async fn posts(
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(&pool, post_entity, &stores).await {
+        match models::translate_post_summary(post_entity, &stores).await {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }

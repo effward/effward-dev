@@ -23,6 +23,12 @@ pub struct SqlUserStore {
     pool: MySqlPool,
 }
 
+impl SqlUserStore {
+    pub fn new(pool: MySqlPool) -> Self {
+        Self { pool }
+    }
+}
+
 #[derive(Debug, sqlx::FromRow)]
 struct UserEntity {
     pub id: u64,
@@ -46,12 +52,6 @@ impl From<UserEntity> for User {
             created: Utc.from_utc_datetime(&user_entity.created),
             updated: Utc.from_utc_datetime(&user_entity.updated),
         }
-    }
-}
-
-impl SqlUserStore {
-    pub fn new(pool: MySqlPool) -> Self {
-        Self { pool }
     }
 }
 

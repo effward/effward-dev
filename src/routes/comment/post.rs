@@ -4,7 +4,7 @@ use shortguid::ShortGuid;
 use sqlx::MySqlPool;
 
 use crate::{
-    entities::{comment, post::{PostStore}, EntityStores},
+    entities::{comment::{self, CommentStore}, post::{PostStore}, EntityStores},
     routes::{
         user_context::{session_state::TypedSession, user_context, UserContextError},
         utils,
@@ -34,27 +34,19 @@ pub async fn process_comment(
             };
 
             let parent_id = match data.parent_id.to_owned() {
-                Some(parent_id) => match ShortGuid::try_parse(parent_id) {
-                    Ok(parent_public_id) => {
-                        match comment::get_by_public_id(&pool, *parent_public_id.as_uuid()).await {
-                            Ok(p) => Some(p.id),
-                            Err(entity_error) => {
-                                return utils::redirect_entity_error(
-                                    entity_error,
-                                    "parent comment",
-                                );
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        return utils::error_redirect("/error/404", "invalid parent comment uuid");
+                Some(parent_id) => match stores.comment_store.get_by_public_id(&parent_id).await {
+                    Ok(p) => Some(p.id),
+                    Err(entity_error) => {
+                        return utils::redirect_entity_error(
+                            entity_error,
+                            "parent comment",
+                        );
                     }
                 },
                 None => None,
             };
 
-            match comment::insert(
-                &pool,
+            match stores.comment_store.insert(
                 &auth_user_entity.id,
                 &post.id,
                 &parent_id,

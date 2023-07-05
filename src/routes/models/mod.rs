@@ -4,7 +4,7 @@ mod post_summary;
 mod user_model;
 mod utils;
 
-pub use comment::Comment;
+pub use comment::CommentModel;
 pub use post_model::translate_post;
 pub use post_model::PostModel;
 pub use post_summary::translate_post_summary;

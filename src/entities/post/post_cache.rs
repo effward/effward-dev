@@ -23,6 +23,8 @@ where
     }
 }
 
+// TODO: set cache expiry, invalidate collections, etc.
+
 #[async_trait]
 impl<T> PostStore for CachedPostStore<T>
 where
@@ -76,7 +78,7 @@ where
         let key = format!("recent:{:?}:{}", start_index, count);
         let expiry = match start_index {
             Some(_) => Duration::minutes(60),
-            None => Duration::seconds(5),
+            None => Duration::seconds(60),
         };
         self.cache
             .get_cached(

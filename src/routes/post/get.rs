@@ -1,7 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
 use actix_web_flash_messages::IncomingFlashMessages;
-use shortguid::ShortGuid;
-use sqlx::MySqlPool;
 use tera::Tera;
 
 use crate::{
@@ -18,7 +16,6 @@ const HERO_BG_CLASS: &str = "hero-bg-post";
 pub async fn post(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    pool: web::Data<MySqlPool>,
     tera: web::Data<Tera>,
     path: web::Path<String>,
     stores: web::Data<EntityStores>,
@@ -32,7 +29,7 @@ pub async fn post(
         }
     };
 
-    let post_model = models::translate_post(&pool, &post, &stores)
+    let post_model = models::translate_post(&post, &stores)
         .await
         .unwrap();
 

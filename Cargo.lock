@@ -1098,6 +1098,7 @@ dependencies = [
  "actix-web-flash-messages",
  "async-recursion",
  "async-trait",
+ "base64 0.21.2",
  "bincode",
  "chrono",
  "dashmap",

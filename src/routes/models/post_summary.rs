@@ -1,12 +1,10 @@
-use actix_web::web::Data;
-use chrono::{NaiveDateTime, Utc, DateTime};
+use chrono::{Utc, DateTime};
 use serde::Serialize;
-use sqlx::MySqlPool;
 use std::cmp;
 use substring::Substring;
 
 use crate::entities::{
-    comment, content, post::Post, user::UserStore, EntityError, EntityStores,
+    comment::{self, CommentStore}, content::ContentStore, post::Post, user::UserStore, EntityError, EntityStores,
 };
 
 use super::{utils, UserModel};
@@ -27,7 +25,6 @@ pub struct PostSummary {
 }
 
 pub async fn translate_post_summary(
-    pool: &MySqlPool,
     post: &Post,
     stores: &EntityStores,
 ) -> Result<PostSummary, EntityError> {
@@ -37,7 +34,7 @@ pub async fn translate_post_summary(
     let mut post_preview: Option<String> = None;
     let content = match post.content_id {
         Some(id) => {
-            let content = content::get_by_id(pool, id).await?;
+            let content = stores.content_store.get_by_id(id).await?;
             let preview_length = cmp::min(content.body.len(), POST_PREVIEW_LENGTH);
             let mut preview = content.body.substring(0, preview_length).to_owned();
 
@@ -50,7 +47,7 @@ pub async fn translate_post_summary(
         None => None,
     };
 
-    let comment_count = comment::get_count_by_post_id(pool, &post.id).await?;
+    let comment_count = stores.comment_store.get_count_by_post_id(&post.id).await?;
 
     Ok(PostSummary {
         id: post.public_id.clone(),

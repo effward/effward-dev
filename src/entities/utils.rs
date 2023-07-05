@@ -1,3 +1,5 @@
+use base64::{engine::general_purpose, Engine};
+use sha2::{Digest, Sha256};
 use shortguid::ShortGuid;
 use uuid::Uuid;
 
@@ -42,4 +44,27 @@ pub fn parse_public_id(public_id: &str) -> Result<Uuid, EntityError> {
         Ok(id) => Ok(*id.as_uuid()),
         Err(_) => Err(EntityError::InvalidInput("public_id", "invalid uuid")),
     }
+}
+
+// This must not be changed without special considerations.
+// It is used to encode content stored in cache keys, and changing it could result in different cache results
+pub fn vec_to_base64_string(vec: Vec<u8>) -> String {
+    general_purpose::URL_SAFE_NO_PAD.encode(vec)
+}
+
+// This must not be changed without special considerations.
+// It is used to hash content stored in the DB, and changing it could result in different hashes
+pub fn hash_content(content: &str, min: usize, max: usize) -> Result<Vec<u8>, EntityError> {
+    if content.len() < min {
+        return Err(EntityError::InvalidInput("content", "content is too short"));
+    }
+    if content.len() > max {
+        return Err(EntityError::InvalidInput("content", "content is too long"));
+    }
+
+    let mut hasher = Sha256::new();
+    hasher.update(content);
+
+    let hash = hasher.finalize()[..].to_vec();
+    Ok(hash)
 }
