@@ -9,9 +9,9 @@
               </span>
               <strong class="is-small">{{ comment.author.name }}</strong>
           </a>
-         
-            <p class="subtitle is-6 mx-4 my-1">{{ comment.content | safe }}</p>
-
+          <div class="content mx-5 mt-1">
+            {{ comment.content | safe }}
+          </div>
         </div>
         
         <nav class="level is-mobile">
@@ -39,7 +39,7 @@
   <form id="reply-{{ comment.id }}" class="pt-2 px-4" action="/comment" method="POST" style="display: none;">
       <input type="hidden" name="post_id" value="{{ post.summary.id }}">
       <input type="hidden" name="parent_id" value="{{ comment.id }}">
-      <div class="field">
+      <div class="field comment-textarea">
           <textarea
               id="reply-text-{{ comment.id }}"
               name="content"

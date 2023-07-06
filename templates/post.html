@@ -17,10 +17,8 @@
                             </a>
                         {% endif %}
                         {% if post.summary.content %}
-                            <div class="content">
-                                <p class="mx-4 my-3">
-                                    {{ post.summary.content | safe }}
-                                </p>
+                            <div class="content mx-4 mt-1">
+                                {{ post.summary.content | safe }}
                             </div>
                         {% endif %}
                         <nav class="level is-mobile mt-0 my-1">
@@ -61,7 +59,7 @@
                 <p class="title is-6 mb-2">submit comment</p>
                 <form class="box is-barely-transparent p-3" action="/comment" method="POST">
                     <input type="hidden" name="post_id" value="{{ post.summary.id }}">
-                    <div class="field m-0">
+                    <div class="field comment-textarea m-0">
                         <textarea
                             id="comment-{{ post.summary.id }}"
                             name="content"
@@ -74,26 +72,7 @@
                     </div>
                 </form>
                 <script>
-                    var simplemde = new SimpleMDE({
-                        autosave: {
-                            enabled: true,
-                            delay: 5000,
-                            uniqueId: "comment-{{ post.summary.id }}"
-                        },
-                        blockStyles: {
-                            italis: "_"
-                        },
-                        element: document.getElementById("comment-{{ post.summary.id }}"),
-                        renderingConfig: {
-                            codeSyntaxHighlighting: true
-                        },
-                        shortcuts: {
-                            "toggleCodeBlock": "Cmd-S"
-                        },
-                        showIcons: ["code", "table", "clean-block", "horizontal-rule"],
-                        spellChecker: false,
-                        tabSize: 4
-                    });
+                    enableSimpleMDEById("comment-{{ post.summary.id }}");
                 </script>
             </div>
             {% if post.comments | length > 0 %}

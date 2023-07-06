@@ -52,10 +52,31 @@
                 }
             }
             function enableSimpleMDEById(id) {
-                var simpleMDE = new SimpleMDE({
-                    autofocus: true,
-                    element: document.getElementById(id)
+                var element = document.getElementById(id);
+                var simplemde = new SimpleMDE({
+                    autosave: {
+                        enabled: true,
+                        delay: 5000,
+                        uniqueId: id,
+                    },
+                    blockStyles: {
+                        italis: "_"
+                    },
+                    element: element,
+                    renderingConfig: {
+                        codeSyntaxHighlighting: true
+                    },
+                    shortcuts: {
+                        "toggleCodeBlock": "Cmd-S"
+                    },
+                    showIcons: ["code", "table", "clean-block", "horizontal-rule"],
+                    spellChecker: false,
+                    tabSize: 4
                 });
+
+                if (element.hasAttribute('id')) {
+                    element.removeAttribute('id');
+                }
             }
         </script>
         <style>
@@ -73,6 +94,10 @@
 
         .effward-dev-body .navbar {
             background-color: #e0e0e0;
+        }
+
+        .comment-textarea .CodeMirror, .comment-textarea .CodeMirror-scroll {
+            min-height: 100px;
         }
 
         @media (min-width: 1024px) {
@@ -173,6 +198,7 @@
             background-position: bottom -25px center;
             background-repeat: no-repeat;
             background-size: 102%;
+            background-attachment: local;
         }
         @media (min-width: 1216px) {
             .hero-bg-post {
@@ -222,7 +248,7 @@
             background: rgba(245, 245, 245, 0.95);
         }
         .is-barely-transparent.is-hover:hover {
-            background: rgba(245, 245, 245, 1);
+            background: rgba(245, 245, 245, 0.98);
         }
         .is-transparent {
             background: rgba(245, 245, 245, 0.8);

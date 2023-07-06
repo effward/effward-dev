@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use log::info;
+use maplit::{hashmap, hashset};
 use pulldown_cmark::{html, Options, Parser};
 use sqlx::MySqlPool;
 
@@ -35,7 +36,7 @@ impl From<ContentEntity> for Content {
         Self {
             id: content_entity.id,
             body: content_entity.body.clone(),
-            body_html: render_html(&content_entity.body),
+            body_html: render_safe_html(&content_entity.body),
             body_hash: content_entity.body_hash,
             created: Utc.from_utc_datetime(&content_entity.created),
         }
@@ -144,7 +145,7 @@ pub fn hash_body(body: &str) -> Result<Vec<u8>, EntityError> {
     utils::hash_content(body, MIN_CONTENT_LENGTH, MAX_CONTENT_LENGTH)
 }
 
-fn render_html(body: &str) -> String {
+fn render_safe_html(body: &str) -> String {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_FOOTNOTES);
@@ -154,9 +155,34 @@ fn render_html(body: &str) -> String {
     options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     let parser = Parser::new_ext(body, options);
 
-    let mut html_output = String::new();
-    html::push_html(&mut html_output, parser);
+    let mut unsafe_html = String::new();
+    html::push_html(&mut unsafe_html, parser);
 
-    info!("html: {}", html_output);
-    html_output
+    let mut builder = ammonia::Builder::new();
+    let tag_blocklist = hashset!["script", "style"];
+    let tags = hashset!["a", "blockquote", "br", "code", "del", "div", "em", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "img", "input", "li", "ol", "p", "pre", "strong", "sup", "table", "thead", "tr", "th", "td", "ul"];
+    let tag_attributes = hashmap![
+        "a" => hashset!["href", "title"],
+        "code" => hashset!["class"],
+        "div" => hashset!["class"],
+        "img" => hashset!["src", "align", "alt", "title", "height", "width"],
+        "input" => hashset!["disabled", "type", "checked"],
+        "sup" => hashset!["class"],
+        "td" => hashset!["style"],
+        "th" => hashset!["style"],
+        "h1" => hashset!["id", "class"],
+        "h2" => hashset!["id", "class"],
+        "h3" => hashset!["id", "class"],
+        "h4" => hashset!["id", "class"],
+        "h5" => hashset!["id", "class"],
+        "h6" => hashset!["id", "class"],
+    ];
+    let cleaner = builder
+        .tags(tags)
+        .tag_attributes(tag_attributes)
+        .clean_content_tags(tag_blocklist)
+        .link_rel(Some("noopener noreferrer nofollow"));
+    let safe_html = cleaner.clean(&*unsafe_html).to_string();
+    info!("html: {}", safe_html);
+    safe_html
 }
