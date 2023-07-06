@@ -96,6 +96,10 @@
             background-color: #e0e0e0;
         }
 
+        body.effward-dev-body pre {
+            border-radius: 0;
+        }
+
         code span.token {
             background-color: #272822;
             padding: 0;
@@ -103,8 +107,24 @@
             height: auto;
         }
 
+        .effward-dev-body .CodeMirror, .effward-dev-body .CodeMirror-scroll {
+            border-radius: 0;
+        }
+
         .comment-textarea .CodeMirror, .comment-textarea .CodeMirror-scroll {
             min-height: 100px;
+        }
+
+        .effward-dev-body .editor-toolbar, .effward-dev-body .editor-toolbar:before, .effward-dev-body .editor-toolbar:after {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .comment-textarea .editor-statusbar {
+            padding-top: 5px;
+            padding-left: 10px;
+            padding-bottom: 0;
+            padding-right: 10px;
         }
 
         @media (min-width: 1024px) {

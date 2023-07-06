@@ -57,7 +57,7 @@
             </div>
             <div class="section py-1">
                 <p class="title is-6 mb-2">submit comment</p>
-                <form class="box is-barely-transparent p-3" action="/comment" method="POST">
+                <form class="box is-barely-transparent p-3 mb-0" action="/comment" method="POST">
                     <input type="hidden" name="post_id" value="{{ post.summary.id }}">
                     <div class="field comment-textarea m-0">
                         <textarea
@@ -76,7 +76,7 @@
                 </script>
             </div>
             {% if post.comments | length > 0 %}
-            <div class="section pt-3">
+            <div class="section pt-4">
                 <p class="title is-6 mb-2">comments ({{ post.summary.comment_count }})</p>
                 {% for comment in post.comments %}
                     {% set comment_depth = 0 %}
