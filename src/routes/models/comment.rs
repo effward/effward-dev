@@ -11,8 +11,8 @@ use crate::entities::{
 
 use super::{utils, UserModel};
 
-pub const MAX_CHILD_COMMENTS: u8 = 5;
-const MAX_DEPTH: usize = 5;
+pub const MAX_CHILD_COMMENTS: u8 = 8;
+const MAX_DEPTH: usize = 8;
 
 #[derive(Serialize)]
 pub struct CommentModel {
@@ -52,7 +52,7 @@ pub async fn translate_comment(
         author,
         created: comment.created,
         created_pretty: utils::get_readable_duration(comment.created),
-        content: content.body,
+        content: content.body_html,
         children,
     })
 }

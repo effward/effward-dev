@@ -29,11 +29,7 @@
                     <div class="field">
                         <textarea
                             name="content"
-                            class="textarea is-barely-transparent"
-                            placeholder="text, e.g. hello world 🌐 -- (optional)"
-                            rows="4"
-                            onkeyup="if (this.scrollHeight > this.clientHeight) this.style.height = this.scrollHeight + 'px';"
-                            style="overflow: auto; transition: height 0.2s ease-out;"></textarea>
+                            placeholder="text, e.g. hello world 🌐 -- (optional)"></textarea>
                     </div>
 
                     <div class="field">
@@ -46,4 +42,14 @@
         </div>
     </div>
 </div>
+<script>
+    var simplemde = new SimpleMDE({
+        autofocus: true,
+        autosave: {
+            enabled: true,
+            delay: 5000,
+            uniqueId: "submit-post"
+        }
+    });
+</script>
 {% endblock %}

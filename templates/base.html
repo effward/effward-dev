@@ -5,8 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#f5f5f5">
         <title>{{ title }}</title>
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
         <script src="https://kit.fontawesome.com/f5d73dca8d.js" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+        <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+        <link href="/static/css/prism.css" rel="stylesheet" />
+
         {# TODO: move to .js file / try out typescript? #}
         <script>
             document.addEventListener('DOMContentLoaded', () => {
@@ -43,6 +50,12 @@
                 } else {
                     element.style.display = "none";
                 }
+            }
+            function enableSimpleMDEById(id) {
+                var simpleMDE = new SimpleMDE({
+                    autofocus: true,
+                    element: document.getElementById(id)
+                });
             }
         </script>
         <style>
@@ -222,7 +235,7 @@
         }
         </style>
     </head>
-    <body class="effward-dev-body has-background-light" style="min-height: 100%;">
+    <body class="effward-dev-body has-background-light line-numbers" style="min-height: 100%;">
         <nav class="navbar is-light" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
@@ -304,8 +317,6 @@
 
         {% block container %}
         {% endblock %}
-
-        
-
+    <script src="/static/js/prism.js"></script>
     </body>
 </html>

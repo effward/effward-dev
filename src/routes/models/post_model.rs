@@ -4,9 +4,11 @@ use crate::entities::comment::CommentStore;
 use crate::entities::{post::Post, EntityError, EntityStores};
 
 use super::{
-    comment::{translate_comment, MAX_CHILD_COMMENTS},
+    comment::translate_comment,
     translate_post_summary, CommentModel, PostSummary,
 };
+
+pub const MAX_TOP_LEVEL_COMMENTS: u8 = 50;
 
 #[derive(Serialize)]
 pub struct PostModel {
@@ -19,7 +21,7 @@ pub async fn translate_post(post: &Post, stores: &EntityStores) -> Result<PostMo
 
     let comment_entities = stores
         .comment_store
-        .get_by_post_id_parent_id(post.id, None, None, MAX_CHILD_COMMENTS)
+        .get_by_post_id_parent_id(post.id, None, None, MAX_TOP_LEVEL_COMMENTS)
         .await?;
 
     let mut comments: Vec<CommentModel> = vec![];

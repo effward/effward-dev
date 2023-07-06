@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use chrono::{NaiveDateTime, TimeZone, Utc};
+use log::info;
+use pulldown_cmark::{Options, Parser, html};
 use sqlx::MySqlPool;
 
 use crate::entities::{utils, EntityError};
@@ -32,7 +34,8 @@ impl From<ContentEntity> for Content {
     fn from(content_entity: ContentEntity) -> Self {
         Self {
             id: content_entity.id,
-            body: content_entity.body,
+            body: content_entity.body.clone(),
+            body_html: render_html(&content_entity.body),
             body_hash: content_entity.body_hash,
             created: Utc.from_utc_datetime(&content_entity.created),
         }
@@ -139,4 +142,21 @@ WHERE body_hash = ?
 
 pub fn hash_body(body: &str) -> Result<Vec<u8>, EntityError> {
     utils::hash_content(body, MIN_CONTENT_LENGTH, MAX_CONTENT_LENGTH)
+}
+
+fn render_html(body: &str) -> String {
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_TABLES);
+    options.insert(Options::ENABLE_FOOTNOTES);
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    options.insert(Options::ENABLE_TASKLISTS);
+    options.insert(Options::ENABLE_SMART_PUNCTUATION);
+    options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
+    let parser = Parser::new_ext(body, options);
+
+    let mut html_output = String::new();
+    html::push_html(&mut html_output, parser);
+
+    info!("html: {}", html_output);
+    html_output
 }
