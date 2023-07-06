@@ -89,5 +89,5 @@ fn get_error_message(error_code: SignupErrorCode) -> String {
         SignupErrorCode::Unknown => "an error has ocurred, please try again in a few minutes and/or contact the site administrator",
     };
 
-    return error_message.to_owned();
+    error_message.to_owned()
 }

@@ -33,7 +33,7 @@ where
     async fn insert(
         &self,
         author_id: &u64,
-        title: &String,
+        title: &str,
         link: &Option<String>,
         content: &Option<String>,
     ) -> Result<Post, EntityError> {

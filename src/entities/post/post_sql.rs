@@ -61,7 +61,7 @@ impl PostStore for SqlPostStore {
     async fn insert(
         &self,
         author_id: &u64,
-        title: &String,
+        title: &str,
         link: &Option<String>,
         content: &Option<String>,
     ) -> Result<Post, EntityError> {
@@ -108,7 +108,7 @@ async fn insert(
     pool: &MySqlPool,
     content_store: &CachedSqlContentStore,
     author_id: &u64,
-    title: &String,
+    title: &str,
     link: &Option<String>,
     content: &Option<String>,
 ) -> Result<u64, EntityError> {
@@ -230,7 +230,7 @@ LIMIT ?
 
 fn verify_link(link: &Option<String>) -> Result<Option<String>, EntityError> {
     match link {
-        Some(l) => match Url::parse(&l) {
+        Some(l) => match Url::parse(l) {
             Ok(_) => Ok(link.to_owned()),
             Err(e) => {
                 if l.is_empty() {
@@ -245,6 +245,6 @@ fn verify_link(link: &Option<String>) -> Result<Option<String>, EntityError> {
     }
 }
 
-fn sanitize_title(title: &String) -> Result<String, EntityError> {
+fn sanitize_title(title: &str) -> Result<String, EntityError> {
     utils::sanitize_text(title, MIN_TITLE_LENGTH, MAX_TITLE_LENGTH, "title")
 }

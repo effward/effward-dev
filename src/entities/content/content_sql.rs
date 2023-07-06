@@ -211,7 +211,7 @@ fn render_safe_html(body: &str) -> String {
         .tag_attributes(tag_attributes)
         .clean_content_tags(tag_blocklist)
         .link_rel(Some("noopener noreferrer nofollow"));
-    let safe_html = cleaner.clean(&*unsafe_html).to_string();
+    let safe_html = cleaner.clean(&unsafe_html).to_string();
     info!("html: {}", safe_html);
     safe_html
 }

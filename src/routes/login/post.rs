@@ -26,7 +26,7 @@ pub async fn process_login(
 pub async fn do_login_and_redirect(
     session: TypedSession,
     stores: &EntityStores,
-    username: &String,
+    username: &str,
     password: &Secret<String>,
 ) -> HttpResponse {
     let result = stores
