@@ -160,7 +160,36 @@ fn render_safe_html(body: &str) -> String {
 
     let mut builder = ammonia::Builder::new();
     let tag_blocklist = hashset!["script", "style"];
-    let tags = hashset!["a", "blockquote", "br", "code", "del", "div", "em", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "img", "input", "li", "ol", "p", "pre", "strong", "sup", "table", "thead", "tr", "th", "td", "ul"];
+    let tags = hashset![
+        "a",
+        "blockquote",
+        "br",
+        "code",
+        "del",
+        "div",
+        "em",
+        "hr",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "img",
+        "input",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "strong",
+        "sup",
+        "table",
+        "thead",
+        "tr",
+        "th",
+        "td",
+        "ul"
+    ];
     let tag_attributes = hashmap![
         "a" => hashset!["href", "title"],
         "code" => hashset!["class"],
