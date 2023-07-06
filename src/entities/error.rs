@@ -23,8 +23,7 @@ impl From<sqlx::Error> for EntityError {
                     "23000" => EntityError::DuplicateKey,
                     _ => EntityError::Internal(format!(
                         "SQLx DatabaseError. SQLSTATE Code: {}\nerror: {:?}",
-                        code.to_string(),
-                        db
+                        code, db
                     )),
                 },
                 None => EntityError::Internal(format!("SQLx DatabaseError. error: {:?}", db)),

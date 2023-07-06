@@ -40,7 +40,7 @@ impl EntityStores {
         let post_source = SqlPostStore::new(pool.clone(), content_store.clone());
         let post_store = Arc::new(CachedPostStore::new(Cache::new(), post_source));
 
-        let comment_source = SqlCommentStore::new(pool.clone(), content_store.clone());
+        let comment_source = SqlCommentStore::new(pool, content_store.clone());
         let comment_store = Arc::new(CachedCommentStore::new(Cache::new(), comment_source));
 
         Self {

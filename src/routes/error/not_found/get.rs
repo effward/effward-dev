@@ -43,7 +43,7 @@ pub fn render_not_found<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRespon
     // Don't try to get authenticated user or other session state
     let mut user_context = user_context::get_empty(PAGE_NAME, Some(HERO_BG_CLASS));
 
-    let response = build_response(&tera, &mut user_context);
+    let response = build_response(tera, &mut user_context);
     Ok(ErrorHandlerResponse::Response(
         ServiceResponse::new(request, response).map_into_right_body(),
     ))
@@ -51,7 +51,7 @@ pub fn render_not_found<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRespon
 
 fn build_response(tera: &Tera, user_context: &mut UserContext) -> HttpResponse {
     let mut missing_type = DEFAULT_MISSING_TYPE;
-    if user_context.flash_messages.len() > 0 {
+    if user_context.flash_messages.is_empty() {
         missing_type = &user_context.flash_messages[0];
     }
 

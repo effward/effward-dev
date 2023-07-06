@@ -145,7 +145,7 @@ async fn insert_auth_user(
 
 fn insert_hero_bg_class(context: &mut Context, hero_bg_class: Option<&str>) {
     let hero_bg_class = match hero_bg_class {
-        Some(h) => &h,
+        Some(h) => h,
         None => DEFAULT_HERO_BG_CLASS,
     };
 

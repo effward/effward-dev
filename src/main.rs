@@ -19,7 +19,6 @@ use actix_web::{http::header, web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::{FlashMessagesFramework, Level};
 use dotenv::dotenv;
-use env_logger;
 use log::{error, warn};
 use sqlx::mysql::MySqlPoolOptions;
 use std::env;

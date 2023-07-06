@@ -125,10 +125,7 @@ fn wrap_and_encode<T>(value: T, expiry: Option<Duration>) -> Result<Vec<u8>, Ent
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
-    let deadline = match expiry {
-        Some(expiry) => Some(Utc::now() + expiry),
-        None => None,
-    };
+    let deadline = expiry.map(|expiry| Utc::now() + expiry);
     let wrapped_value = CacheValue {
         value,
         expiry: deadline,
@@ -170,11 +167,11 @@ where
     }
 }
 
-fn do_decode_and_unwrap<T>(encoded: &Vec<u8>) -> Result<Option<T>, EntityError>
+fn do_decode_and_unwrap<T>(encoded: &[u8]) -> Result<Option<T>, EntityError>
 where
     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
 {
-    let wrapped: CacheValue<T> = match bincode::deserialize(&encoded[..]) {
+    let wrapped: CacheValue<T> = match bincode::deserialize(encoded) {
         Ok(decoded) => decoded,
         Err(e) => {
             return Err(EntityError::CachingError(e.to_string()));

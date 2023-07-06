@@ -225,7 +225,8 @@ fn hash_password(password: &Secret<String>, salt: &[u8]) -> String {
 
     let hash_hex = hash.encode_hex::<String>();
     let salt_str = str::from_utf8(salt).unwrap();
-    return hash_hex + SEPARATOR + salt_str + SEPARATOR + HASH_FUNC;
+
+    hash_hex + SEPARATOR + salt_str + SEPARATOR + HASH_FUNC
 }
 
 fn sanitize_name(name: &str) -> Result<String, EntityError> {
