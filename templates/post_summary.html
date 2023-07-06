@@ -10,7 +10,9 @@
           {% endif %}
 
           {% if post.content %}
-            <p class="subtitle is-6 mx-4 my-1">{{ post.content | safe }}</p>
+          <div class="content mx-4 my-1">
+            {{ post.content | safe }}
+          </div>
           {% endif %}
 
         </div>

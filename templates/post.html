@@ -10,11 +10,11 @@
                     <article class="media">
                         <div class="media-content">
                         {% if post.summary.link %}
-                            <a href="{{ post.summary.link }}">
-                                <div class="content">
-                                    <p class="mx-2 my-1">{{ post.summary.link }}</p>
-                                </div>
-                            </a>
+                            <p class="mx-2 my-1">
+                                <a href="{{ post.summary.link }}">
+                                    {{ post.summary.link }}
+                                </a>
+                            </p>
                         {% endif %}
                         {% if post.summary.content %}
                             <div class="content mx-4 mt-1">
