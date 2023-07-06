@@ -5,8 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#f5f5f5">
         <title>{{ title }}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+        <link rel="stylesheet" href="/static/css/bulma.css">
         <script src="https://kit.fontawesome.com/f5d73dca8d.js" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+        <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+        <link href="/static/css/prism.css" rel="stylesheet" />
+
         {# TODO: move to .js file / try out typescript? #}
         <script>
             document.addEventListener('DOMContentLoaded', () => {
@@ -44,6 +51,33 @@
                     element.style.display = "none";
                 }
             }
+            function enableSimpleMDEById(id) {
+                var element = document.getElementById(id);
+                var simplemde = new SimpleMDE({
+                    autosave: {
+                        enabled: true,
+                        delay: 5000,
+                        uniqueId: id,
+                    },
+                    blockStyles: {
+                        italis: "_"
+                    },
+                    element: element,
+                    renderingConfig: {
+                        codeSyntaxHighlighting: true
+                    },
+                    shortcuts: {
+                        "toggleCodeBlock": "Cmd-S"
+                    },
+                    showIcons: ["code", "table", "clean-block", "horizontal-rule"],
+                    spellChecker: false,
+                    tabSize: 4
+                });
+
+                if (element.hasAttribute('id')) {
+                    element.removeAttribute('id');
+                }
+            }
         </script>
         <style>
         html {
@@ -62,6 +96,37 @@
             background-color: #e0e0e0;
         }
 
+        body.effward-dev-body pre {
+            border-radius: 0;
+        }
+
+        code span.token {
+            background-color: #272822;
+            padding: 0;
+            font-size: 1em;
+            height: auto;
+        }
+
+        .effward-dev-body .CodeMirror, .effward-dev-body .CodeMirror-scroll {
+            border-radius: 0;
+        }
+
+        .comment-textarea .CodeMirror, .comment-textarea .CodeMirror-scroll {
+            min-height: 100px;
+        }
+
+        .effward-dev-body .editor-toolbar, .effward-dev-body .editor-toolbar:before, .effward-dev-body .editor-toolbar:after {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .comment-textarea .editor-statusbar {
+            padding-top: 5px;
+            padding-left: 10px;
+            padding-bottom: 0;
+            padding-right: 10px;
+        }
+
         @media (min-width: 1024px) {
             a.navbar-item, div.navbar-item, div.navbar-item .buttons {
                 padding-top: 0;
@@ -69,7 +134,7 @@
             }
         }
 
-        article.media a {
+        article.media a, article.media a p {
             color: #4a4a4a;
         }
 
@@ -160,6 +225,7 @@
             background-position: bottom -25px center;
             background-repeat: no-repeat;
             background-size: 102%;
+            background-attachment: local;
         }
         @media (min-width: 1216px) {
             .hero-bg-post {
@@ -209,7 +275,7 @@
             background: rgba(245, 245, 245, 0.95);
         }
         .is-barely-transparent.is-hover:hover {
-            background: rgba(245, 245, 245, 1);
+            background: rgba(245, 245, 245, 0.98);
         }
         .is-transparent {
             background: rgba(245, 245, 245, 0.8);
@@ -222,7 +288,7 @@
         }
         </style>
     </head>
-    <body class="effward-dev-body has-background-light" style="min-height: 100%;">
+    <body class="effward-dev-body has-background-light line-numbers" style="min-height: 100%;">
         <nav class="navbar is-light" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
@@ -304,8 +370,6 @@
 
         {% block container %}
         {% endblock %}
-
-        
-
+    <script src="/static/js/prism.js"></script>
     </body>
 </html>

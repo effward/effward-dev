@@ -10,17 +10,15 @@
                     <article class="media">
                         <div class="media-content">
                         {% if post.summary.link %}
-                            <a href="{{ post.summary.link }}">
-                                <div class="content">
-                                    <p class="mx-2 my-1">{{ post.summary.link }}</p>
-                                </div>
-                            </a>
+                            <p class="mx-2 my-1">
+                                <a href="{{ post.summary.link }}">
+                                    {{ post.summary.link }}
+                                </a>
+                            </p>
                         {% endif %}
                         {% if post.summary.content %}
-                            <div class="content">
-                                <p class="mx-4 my-3">
-                                    {{ post.summary.content }}
-                                </p>
+                            <div class="content mx-4 mt-1">
+                                {{ post.summary.content | safe }}
                             </div>
                         {% endif %}
                         <nav class="level is-mobile mt-0 my-1">
@@ -59,16 +57,13 @@
             </div>
             <div class="section py-1">
                 <p class="title is-6 mb-2">submit comment</p>
-                <form class="box is-barely-transparent p-3" action="/comment" method="POST">
+                <form class="box is-barely-transparent p-3 mb-0" action="/comment" method="POST">
                     <input type="hidden" name="post_id" value="{{ post.summary.id }}">
-                    <div class="field">
+                    <div class="field comment-textarea m-0">
                         <textarea
+                            id="comment-{{ post.summary.id }}"
                             name="content"
-                            class="textarea is-barely-transparent"
-                            placeholder="your comment goes here"
-                            rows="3"
-                            onkeyup="if (this.scrollHeight > this.clientHeight) this.style.height = this.scrollHeight + 'px';"
-                            style="overflow: auto; transition: height 0.2s ease-out;"></textarea>
+                            placeholder="your comment goes here"></textarea>
                     </div>
                     <div class="field">
                         <div class="control">
@@ -76,9 +71,12 @@
                         </div>
                     </div>
                 </form>
+                <script>
+                    enableSimpleMDEById("comment-{{ post.summary.id }}");
+                </script>
             </div>
             {% if post.comments | length > 0 %}
-            <div class="section pt-3">
+            <div class="section pt-4">
                 <p class="title is-6 mb-2">comments ({{ post.summary.comment_count }})</p>
                 {% for comment in post.comments %}
                     {% set comment_depth = 0 %}

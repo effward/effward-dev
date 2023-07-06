@@ -11,6 +11,7 @@ actix-files = "0.6.2"
 actix-session = { version = "0.7.2", features = ["redis-rs-session", "redis-rs-tls-session"] }
 actix-web = "4"
 actix-web-flash-messages = { version = "0.4.2", features = ["cookies"] }
+ammonia = "3.3.0"
 async-recursion = "1.0.4"
 async-trait = "0.1.69"
 base64 = "0.21.2"
@@ -23,8 +24,10 @@ env_logger = "0.10.0"
 hex = "0.4.3"
 html-escape = "0.2.13"
 log = "0.4.19"
+maplit = "1.0.2"
 mysql = "*"
 pbkdf2 = { version = "0.12", features = ["simple"] }
+pulldown-cmark = "0.9.3"
 secrecy = { version = "0.8", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.10"

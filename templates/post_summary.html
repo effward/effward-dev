@@ -9,8 +9,10 @@
           <p class="mx-2 my-1" style="text-decoration: underline;">{{ post.link }}</p>
           {% endif %}
 
-          {% if post.post_preview %}
-            <p class="subtitle is-6 mx-4 my-1">{{ post.post_preview }}</p>
+          {% if post.content %}
+          <div class="content mx-4 my-1">
+            {{ post.content | safe }}
+          </div>
           {% endif %}
 
         </div>

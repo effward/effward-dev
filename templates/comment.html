@@ -9,14 +9,14 @@
               </span>
               <strong class="is-small">{{ comment.author.name }}</strong>
           </a>
-         
-            <p class="subtitle is-6 mx-4 my-1">{{ comment.content }}</p>
-
+          <div class="content mx-5 mt-1">
+            {{ comment.content | safe }}
+          </div>
         </div>
         
         <nav class="level is-mobile">
           <div class="level-left">
-            <button onclick="toggleById('reply-{{ comment.id }}')" class="button level-item is-small is-info is-light" aria-label="reply">
+            <button onclick="toggleById('reply-{{ comment.id }}'); enableSimpleMDEById('reply-text-{{ comment.id }}')" class="button level-item is-small is-info is-light" aria-label="reply">
               <span class="icon is-small">
                 <i class="fas fa-reply" aria-hidden="true"></i>
               </span>
@@ -39,14 +39,11 @@
   <form id="reply-{{ comment.id }}" class="pt-2 px-4" action="/comment" method="POST" style="display: none;">
       <input type="hidden" name="post_id" value="{{ post.summary.id }}">
       <input type="hidden" name="parent_id" value="{{ comment.id }}">
-      <div class="field">
+      <div class="field comment-textarea">
           <textarea
+              id="reply-text-{{ comment.id }}"
               name="content"
-              class="textarea is-barely-transparent"
-              placeholder="your reply goes here"
-              rows="3"
-              onkeyup="if (this.scrollHeight > this.clientHeight) this.style.height = this.scrollHeight + 'px';"
-              style="overflow: auto; transition: height 0.2s ease-out;"></textarea>
+              placeholder="your reply goes here"></textarea>
       </div>
       <div class="field">
           <div class="control">
@@ -56,7 +53,7 @@
   </form>
 </div>
 {% if comment.children | length > 0 %}
-    <div id="children-{{ comment.id }}" class="section py-0 pl-4 pr-0" style="border-left: dashed white 1px;">
+    <div id="children-{{ comment.id }}" class="section py-0 pl-4 pr-0" style="border-left: dashed lightgray 1px; background: rgba(0, 0, 0, 0.05);">
     {% for comment in comment.children %}
         {% set comment_depth = comment_depth + 1 %}
         {% include "comment.html" %}
