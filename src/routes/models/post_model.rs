@@ -3,10 +3,7 @@ use serde::Serialize;
 use crate::entities::comment::CommentStore;
 use crate::entities::{post::Post, EntityError, EntityStores};
 
-use super::{
-    comment::translate_comment,
-    translate_post_summary, CommentModel, PostSummary,
-};
+use super::{comment::translate_comment, translate_post_summary, CommentModel, PostSummary};
 
 pub const MAX_TOP_LEVEL_COMMENTS: u8 = 50;
 

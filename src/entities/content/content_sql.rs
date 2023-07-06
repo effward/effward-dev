@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use log::info;
-use pulldown_cmark::{Options, Parser, html};
+use pulldown_cmark::{html, Options, Parser};
 use sqlx::MySqlPool;
 
 use crate::entities::{utils, EntityError};
