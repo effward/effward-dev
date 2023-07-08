@@ -1101,7 +1101,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
-name = "effward-dev"
+name = "effward_dev"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
@@ -1110,6 +1110,7 @@ dependencies = [
  "actix-web",
  "actix-web-flash-messages",
  "ammonia",
+ "anyhow",
  "async-recursion",
  "async-trait",
  "base64 0.21.2",
@@ -1126,6 +1127,7 @@ dependencies = [
  "mysql",
  "pbkdf2",
  "pulldown-cmark",
+ "redis",
  "secrecy",
  "serde",
  "sha2",
