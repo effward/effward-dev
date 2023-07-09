@@ -20,6 +20,7 @@ services:
       - DATABASE_URL
       - HMAC_KEY
       - REDIS_URI=redis://redis:6379
+      - EFFWARD_DEV_ENVIRONMENT=dev
     ports:
       - "8080:8080"
     networks:

@@ -13,6 +13,10 @@ primary_region = "sea"
 [deploy]
   strategy = "immediate"
 
+[env]
+  EFFWARD_DEV_ENVIRONMENT = "production"
+  RUST_LOG = "info"
+
 [http_service]
   internal_port = 8080
   force_https = true
@@ -20,5 +24,12 @@ primary_region = "sea"
   auto_start_machines = true
   [http_service.concurrency]
     type = "requests"
-    hard_limit = 500
-    soft_limit = 350
+    hard_limit = 5000
+    soft_limit = 3500
+  [checks]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "1s"
+    path = "/health"
+    protocol = "https"
