@@ -51,7 +51,7 @@ pub fn render_not_found<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRespon
 
 fn build_response(tera: &Tera, user_context: &mut UserContext) -> HttpResponse {
     let mut missing_type = DEFAULT_MISSING_TYPE;
-    if user_context.flash_messages.is_empty() {
+    if !user_context.flash_messages.is_empty() {
         missing_type = &user_context.flash_messages[0];
     }
 
