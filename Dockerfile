@@ -16,4 +16,4 @@ COPY /public /app/target/release/public
 ENV DATABASE_URL=
 
 EXPOSE 8080
-CMD ["./effward-dev"]
+CMD ["./effward_dev"]
