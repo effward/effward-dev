@@ -1,17 +1,16 @@
-# fly.toml app configuration file generated for effward-dev on 2023-04-26T15:06:27-07:00
-#
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = "effward-dev"
-primary_region = "sea"
+primary_region = "sjc"
 
 [build]
   dockerfile = "Dockerfile"
   build-target = "builder"
 
 [deploy]
-  strategy = "immediate"
+  strategy = "rolling"
+  max_unavailable = 1
 
 [env]
   EFFWARD_DEV_ENVIRONMENT = "production"
@@ -22,11 +21,12 @@ primary_region = "sea"
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
+  min_machines_running = 1
   [http_service.concurrency]
     type = "requests"
     hard_limit = 5000
     soft_limit = 3500
-  [checks]
+  [[http_service.checks]]
     grace_period = "10s"
     interval = "30s"
     method = "GET"
