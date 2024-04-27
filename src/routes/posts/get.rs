@@ -46,7 +46,8 @@ pub async fn posts(
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(post_entity, &stores, MAX_CONTENT_PREVIEW_LENGTH).await {
+        match models::translate_post_summary(post_entity, &stores, MAX_CONTENT_PREVIEW_LENGTH).await
+        {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }
