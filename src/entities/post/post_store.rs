@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use uuid::Uuid;
 
 use crate::entities::EntityError;
 
@@ -9,6 +10,14 @@ pub trait PostStore: Send + Sync + Clone {
     async fn insert(
         &self,
         author_id: &u64,
+        title: &str,
+        link: &Option<String>,
+        content: &Option<String>,
+    ) -> Result<Post, EntityError>;
+
+    async fn update(
+        &self,
+        public_id: Uuid,
         title: &str,
         link: &Option<String>,
         content: &Option<String>,

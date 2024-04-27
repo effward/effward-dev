@@ -78,6 +78,24 @@ impl PostStore for SqlPostStore {
         Ok(self.get_by_id(post_id).await?)
     }
 
+    async fn update(
+        &self,
+        public_id: Uuid,
+        title: &str,
+        link: &Option<String>,
+        content: &Option<String>,
+    ) -> Result<Post, EntityError> {
+        update(
+            &self.pool,
+            &self.content_store,
+            public_id,
+            title,
+            link,
+            content,
+        )
+        .await?;
+    }
+
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {
         Ok(Post::from(get_by_id(&self.pool, id).await?))
     }
@@ -152,6 +170,47 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     .last_insert_id();
 
     Ok(post_id)
+}
+
+async fn update(
+    pool: &MySqlPool,
+    content_store: &CachedSqlContentStore,
+    public_id: Uuid,
+    title: &str,
+    link: &Option<String>,
+    content: &Option<String>,
+) -> Result<(), EntityError> {
+    let sanitized_title = sanitize_title(title)?;
+    let link = verify_link(link)?;
+
+    if content.is_none() && link.is_none() {
+        return Err(EntityError::InvalidInput(
+            "post",
+            "post must contain either a link or content (or both)",
+        ));
+    }
+
+    let content_id = match content {
+        Some(c) => {
+            let content = content_store.get_or_create(c).await?;
+            Some(content.id)
+        }
+        None => None,
+    };
+
+    let updated = Utc::now().naive_utc();
+
+    sqlx::query!(
+        r#"
+        "#,
+        &public_id[..],
+        sanitized_title,
+        link,
+        content_id,
+        updated
+    )
+    .execute(pool)
+    .await?
 }
 
 async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {

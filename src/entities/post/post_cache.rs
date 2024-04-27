@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::Duration;
+use uuid::Uuid;
 
 use crate::entities::{cache::Cache, EntityError};
 
@@ -44,6 +45,16 @@ where
                 None,
             )
             .await
+    }
+    
+    async fn update(
+        &self,
+        public_id: Uuid,
+        title: &str,
+        link: &Option<String>,
+        content: &Option<String>,
+    ) -> Result<Post, EntityError> {
+
     }
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {
