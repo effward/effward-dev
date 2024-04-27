@@ -16,6 +16,7 @@ use crate::{
 
 const POSTS_PER_PAGE: u8 = 15;
 const HERO_BG_CLASS: &str = "hero-bg-posts";
+const MAX_CONTENT_PREVIEW_LENGTH: usize = 2048;
 
 pub async fn posts(
     session: TypedSession,
@@ -45,7 +46,7 @@ pub async fn posts(
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(post_entity, &stores).await {
+        match models::translate_post_summary(post_entity, &stores, MAX_CONTENT_PREVIEW_LENGTH).await {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }

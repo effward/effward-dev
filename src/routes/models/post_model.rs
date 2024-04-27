@@ -14,7 +14,7 @@ pub struct PostModel {
 }
 
 pub async fn translate_post(post: &Post, stores: &EntityStores) -> Result<PostModel, EntityError> {
-    let summary = translate_post_summary(post, stores).await?;
+    let summary = translate_post_summary(post, stores, 0).await?;
 
     let comment_entities = stores
         .comment_store
