@@ -11,6 +11,7 @@ use crate::{
 };
 
 const POSTS_PER_PAGE: u8 = 2;
+const MAX_CONTENT_PREVIEW_LENGTH: usize = 1500;
 
 pub async fn index(
     session: TypedSession,
@@ -36,7 +37,8 @@ pub async fn index(
 
     let mut posts: Vec<PostSummary> = vec![];
     for post_entity in post_entities.iter() {
-        match models::translate_post_summary(post_entity, &stores).await {
+        match models::translate_post_summary(post_entity, &stores, MAX_CONTENT_PREVIEW_LENGTH).await
+        {
             Ok(post_summary) => {
                 posts.push(post_summary);
             }
