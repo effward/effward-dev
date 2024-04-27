@@ -51,14 +51,15 @@ impl Cache {
         decode_and_unwrap_ref(encoded)
     }
 
-    fn remove<T>(&self, key: String) -> Result<Option<T>, EntityError>
-    where
-        for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
-    {
-        let encoded = self.map.remove(&key);
+    // TODO: use in invalidation
+    // fn remove<T>(&self, key: String) -> Result<Option<T>, EntityError>
+    // where
+    //     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
+    // {
+    //     let encoded = self.map.remove(&key);
 
-        decode_and_unwrap(encoded)
-    }
+    //     decode_and_unwrap(encoded)
+    // }
 
     // TODO: expand key builder to allow for tags/collections
     pub async fn get_cached<T, Fut, F, FKey>(
@@ -147,15 +148,15 @@ where
     }
 }
 
-fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Result<Option<T>, EntityError>
-where
-    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
-{
-    match encoded {
-        Some((_, encoded)) => do_decode_and_unwrap(&encoded),
-        None => Ok(None),
-    }
-}
+// fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Result<Option<T>, EntityError>
+// where
+//     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
+// {
+//     match encoded {
+//         Some((_, encoded)) => do_decode_and_unwrap(&encoded),
+//         None => Ok(None),
+//     }
+// }
 
 fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Result<Option<T>, EntityError>
 where
