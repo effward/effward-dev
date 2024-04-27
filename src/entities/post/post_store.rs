@@ -21,7 +21,7 @@ pub trait PostStore: Send + Sync + Clone {
         title: &str,
         link: &Option<String>,
         content: &Option<String>,
-    ) -> Result<Post, EntityError>;
+    ) -> Result<(), EntityError>;
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError>;
 

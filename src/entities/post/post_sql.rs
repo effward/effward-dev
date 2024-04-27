@@ -84,8 +84,8 @@ impl PostStore for SqlPostStore {
         title: &str,
         link: &Option<String>,
         content: &Option<String>,
-    ) -> Result<Post, EntityError> {
-        update(
+    ) -> Result<(), EntityError> {
+        Ok(update(
             &self.pool,
             &self.content_store,
             public_id,
@@ -93,7 +93,7 @@ impl PostStore for SqlPostStore {
             link,
             content,
         )
-        .await?;
+        .await?)
     }
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {
@@ -198,19 +198,26 @@ async fn update(
         None => None,
     };
 
+    let public_id_bytes = public_id.into_bytes();
     let updated = Utc::now().naive_utc();
 
-    sqlx::query!(
+    //TODO: get and return post entity
+    let _ = sqlx::query!(
         r#"
+UPDATE posts
+SET title = ?, link = ?, content_id = ?, updated = ?
+WHERE public_id = ?
         "#,
-        &public_id[..],
         sanitized_title,
         link,
         content_id,
-        updated
+        updated,
+        &public_id_bytes[..]
     )
     .execute(pool)
-    .await?
+    .await?;
+
+    Ok(())
 }
 
 async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {

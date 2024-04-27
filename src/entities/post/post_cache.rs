@@ -53,8 +53,11 @@ where
         title: &str,
         link: &Option<String>,
         content: &Option<String>,
-    ) -> Result<Post, EntityError> {
+    ) -> Result<(), EntityError> {
+        let _ = self.source.update(public_id, title, link, content).await?;
 
+        let key = build
+        self.cache.delete()
     }
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {

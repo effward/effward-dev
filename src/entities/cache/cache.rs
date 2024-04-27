@@ -148,15 +148,15 @@ where
     }
 }
 
-// fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Result<Option<T>, EntityError>
-// where
-//     for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
-// {
-//     match encoded {
-//         Some((_, encoded)) => do_decode_and_unwrap(&encoded),
-//         None => Ok(None),
-//     }
-// }
+fn decode_and_unwrap<T>(encoded: Option<(String, Vec<u8>)>) -> Result<Option<T>, EntityError>
+where
+    for<'a> T: Deserialize<'a> + Serialize + PartialEq + Clone + std::fmt::Debug,
+{
+    match encoded {
+        Some((_, encoded)) => do_decode_and_unwrap(&encoded),
+        None => Ok(None),
+    }
+}
 
 fn decode_and_unwrap_ref<T>(encoded: Option<Ref<String, Vec<u8>>>) -> Result<Option<T>, EntityError>
 where
