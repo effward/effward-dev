@@ -1,24 +1,23 @@
-use actix_web::{web, HttpResponse, Responder};
-use actix_web_flash_messages::IncomingFlashMessages;
+use actix_web::{web::Data, HttpResponse, Responder};
+use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
 use tera::Tera;
 
 use crate::{
-    entities::{post::PostStore, EntityStores},
+    entities::EntityStores,
     routes::{
-        models,
         user_context::{session_state::TypedSession, user_context},
         utils,
     },
 };
 
-const HERO_BG_CLASS: &str = "hero-bg-post";
+const HERO_BG_CLASS: &str = "hero-bg-submit";
 
-pub async fn post(
+pub async fn edit(
     session: TypedSession,
     flash_messages: IncomingFlashMessages,
-    tera: web::Data<Tera>,
+    stores: Data<EntityStores>,
+    tera: Data<Tera>,
     path: web::Path<String>,
-    stores: web::Data<EntityStores>,
 ) -> impl Responder {
     // TODO: handle errors
     let public_id = path.into_inner();
@@ -30,20 +29,27 @@ pub async fn post(
     };
 
     let post_model = models::translate_post(&post, &stores).await.unwrap();
-
-    let mut user_context = user_context::build(
+    
+    let user_context = user_context::build(
         session,
         flash_messages,
         &stores,
-        &format!("post - {}", post_model.summary.title),
+        &format!("edit post - {}", post_model.summary.title),
         Some(HERO_BG_CLASS),
     )
     .await;
-
+    
     user_context.context.insert("post", &post_model);
 
-    // TODO: handle error
-    let rendered = tera.render("post.html", &user_context.context).unwrap();
-
-    HttpResponse::Ok().body(rendered)
+    match user_context.auth_user {
+        Some(_) => {
+            // TODO: handle error
+            let rendered = tera.render("edit.html", &user_context.context).unwrap();
+            HttpResponse::Ok().body(rendered)
+        }
+        None => {
+            FlashMessage::warning("you must be logged in to submit posts").send();
+            utils::redirect("/login")
+        }
+    }
 }

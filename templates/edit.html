@@ -1,0 +1,67 @@
+{% extends "base-hero.html" %}
+
+{% block hero_head %}
+<div class="container is-max-widescreen">
+    <div class="columns">
+        <div class="column">
+            <div class="section pt-3">
+                <p class="title is-6 mb-2">edit post</p>
+                <form class="box is-barely-transparent" action="/submit" method="POST">
+
+                    <div class="field">
+                        <p class="control has-icons-left">
+                            <input type="text" name="title" class="input is-barely-transparent" placeholder="title">
+                            <span class="icon is-small is-left">
+                                <i class="far fa-newspaper" style="color: #000;"></i>
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <p class="control has-icons-left">
+                            <input type="text" name="link" class="input is-barely-transparent" placeholder="link, e.g. http://effward.dev -- (optional)">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-link" style="color: #000;"></i>
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <textarea
+                            name="content"
+                            placeholder="text, e.g. hello world 🌐 -- (optional)"></textarea>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <input type="submit" class="button is-success is-light" value="submit">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var simplemde = new SimpleMDE({
+        autofocus: true,
+        autosave: {
+            enabled: true,
+            delay: 5000,
+            uniqueId: "submit-post"
+        },
+        blockStyles: {
+            italis: "_"
+        },
+        renderingConfig: {
+            codeSyntaxHighlighting: true
+        },
+        shortcuts: {
+            "toggleCodeBlock": "Cmd-S"
+        },
+        showIcons: ["code", "table", "clean-block", "horizontal-rule"],
+        spellChecker: false,
+        tabSize: 4
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use chrono::Duration;
-use uuid::Uuid;
 
 use crate::entities::{cache::Cache, EntityError};
 
@@ -46,18 +45,21 @@ where
             )
             .await
     }
-    
+
     async fn update(
         &self,
-        public_id: Uuid,
+        public_id: &str,
         title: &str,
         link: &Option<String>,
         content: &Option<String>,
-    ) -> Result<(), EntityError> {
-        let _ = self.source.update(public_id, title, link, content).await?;
-
-        let key = build
-        self.cache.delete()
+    ) -> Result<Post, EntityError> {
+        self.cache
+            .insert_cached(
+                || async { self.source.update(public_id, title, link, content).await },
+                build_keys,
+                None,
+            )
+            .await
     }
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {

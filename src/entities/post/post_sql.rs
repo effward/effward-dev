@@ -80,20 +80,24 @@ impl PostStore for SqlPostStore {
 
     async fn update(
         &self,
-        public_id: Uuid,
+        public_id: &str,
         title: &str,
         link: &Option<String>,
         content: &Option<String>,
-    ) -> Result<(), EntityError> {
-        Ok(update(
-            &self.pool,
-            &self.content_store,
-            public_id,
-            title,
-            link,
-            content,
-        )
-        .await?)
+    ) -> Result<Post, EntityError> {
+        let public_id_uuid = utils::parse_public_id(public_id)?;
+
+        Ok(Post::from(
+            update(
+                &self.pool,
+                &self.content_store,
+                public_id_uuid,
+                title,
+                link,
+                content,
+            )
+            .await?,
+        ))
     }
 
     async fn get_by_id(&self, id: u64) -> Result<Post, EntityError> {
@@ -101,9 +105,11 @@ impl PostStore for SqlPostStore {
     }
 
     async fn get_by_public_id(&self, public_id: &str) -> Result<Post, EntityError> {
-        let public_id = utils::parse_public_id(public_id)?;
+        let public_id_uuid = utils::parse_public_id(public_id)?;
 
-        Ok(Post::from(get_by_public_id(&self.pool, public_id).await?))
+        Ok(Post::from(
+            get_by_public_id(&self.pool, public_id_uuid).await?,
+        ))
     }
 
     async fn get_recent(
@@ -179,7 +185,7 @@ async fn update(
     title: &str,
     link: &Option<String>,
     content: &Option<String>,
-) -> Result<(), EntityError> {
+) -> Result<PostEntity, EntityError> {
     let sanitized_title = sanitize_title(title)?;
     let link = verify_link(link)?;
 
@@ -198,26 +204,38 @@ async fn update(
         None => None,
     };
 
-    let public_id_bytes = public_id.into_bytes();
-    let updated = Utc::now().naive_utc();
+    let mut existing = get_by_public_id(pool, public_id).await?;
 
-    //TODO: get and return post entity
-    let _ = sqlx::query!(
-        r#"
+    if existing.title != sanitized_title
+        || existing.link != link
+        || existing.content_id != content_id
+    {
+        // Update table if anything has changed
+        let public_id_bytes = public_id.into_bytes();
+        let updated = Utc::now().naive_utc();
+
+        let _ = sqlx::query!(
+            r#"
 UPDATE posts
 SET title = ?, link = ?, content_id = ?, updated = ?
 WHERE public_id = ?
-        "#,
-        sanitized_title,
-        link,
-        content_id,
-        updated,
-        &public_id_bytes[..]
-    )
-    .execute(pool)
-    .await?;
+            "#,
+            sanitized_title,
+            link,
+            content_id,
+            updated,
+            &public_id_bytes[..]
+        )
+        .execute(pool)
+        .await?;
 
-    Ok(())
+        existing.title = sanitized_title;
+        existing.link = link;
+        existing.content_id = content_id;
+        existing.updated = updated;
+    }
+
+    Ok(existing)
 }
 
 async fn get_by_id(pool: &MySqlPool, id: u64) -> Result<PostEntity, EntityError> {
